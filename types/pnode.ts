@@ -45,6 +45,8 @@ export interface PNode {
     latencyHistory: number[];
     scoreHistory: number[];
   };
+  credits?: number; // Pod credits score (reliability metric from Pod Credits API)
+  creditsRank?: number; // Ranking by credits among all pNodes
 }
 
 export interface NetworkStats {
