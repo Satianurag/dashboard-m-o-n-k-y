@@ -164,6 +164,65 @@
   }
 }
 
+/* Accessibility: Skip Link */
+.skip-link {
+  @apply absolute left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium z-[100];
+  top: -100px;
+  transition: top 0.2s ease-in-out;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Accessibility: Focus Indicators */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary ring-0;
+}
+
+/* Accessibility: Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Micro-interactions: Card hover effects */
+.card-interactive {
+  @apply transition-all duration-200 ease-out;
+}
+
+.card-interactive:hover {
+  @apply scale-[1.01] shadow-lg;
+  box-shadow: 0 0 20px oklch(0.4703 0.2364 263.19 / 15%);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 .recharts-cartesian-grid-vertical :first-child,
 .recharts-cartesian-grid-vertical :last-child {
   opacity: 0;

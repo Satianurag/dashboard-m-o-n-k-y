@@ -31,29 +31,29 @@ export function NodeSearch({ nodes, onFilterChange, className }: NodeSearchProps
   const [filters, setFilters] = useState<SearchFilters>({});
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const countries = useMemo(() => 
+  const countries = useMemo(() =>
     [...new Set(nodes.map(n => n.location?.country).filter(Boolean))] as string[],
     [nodes]
   );
 
-  const cities = useMemo(() => 
+  const cities = useMemo(() =>
     [...new Set(nodes.map(n => n.location?.city).filter(Boolean))] as string[],
     [nodes]
   );
 
-  const versions = useMemo(() => 
+  const versions = useMemo(() =>
     [...new Set(nodes.map(n => n.version))],
     [nodes]
   );
 
   const applyFilters = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
-    
+
     let filtered = [...nodes];
 
     if (newFilters.query) {
       const query = newFilters.query.toLowerCase();
-      filtered = filtered.filter(n => 
+      filtered = filtered.filter(n =>
         n.pubkey.toLowerCase().includes(query) ||
         n.location?.city?.toLowerCase().includes(query) ||
         n.location?.country?.toLowerCase().includes(query) ||
@@ -66,19 +66,19 @@ export function NodeSearch({ nodes, onFilterChange, className }: NodeSearchProps
     }
 
     if (newFilters.countries?.length) {
-      filtered = filtered.filter(n => 
+      filtered = filtered.filter(n =>
         n.location && newFilters.countries?.includes(n.location.country)
       );
     }
 
     if (newFilters.cities?.length) {
-      filtered = filtered.filter(n => 
+      filtered = filtered.filter(n =>
         n.location && newFilters.cities?.includes(n.location.city)
       );
     }
 
     if (newFilters.performanceTiers?.length) {
-      filtered = filtered.filter(n => 
+      filtered = filtered.filter(n =>
         newFilters.performanceTiers?.includes(n.performance.tier)
       );
     }
@@ -120,7 +120,7 @@ export function NodeSearch({ nodes, onFilterChange, className }: NodeSearchProps
     onFilterChange(nodes);
   };
 
-  const activeFilterCount = Object.values(filters).filter(v => 
+  const activeFilterCount = Object.values(filters).filter(v =>
     v !== undefined && (Array.isArray(v) ? v.length > 0 : true)
   ).length;
 
@@ -128,7 +128,9 @@ export function NodeSearch({ nodes, onFilterChange, className }: NodeSearchProps
     <div className={cn('space-y-4', className)}>
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-[200px]">
+          <label htmlFor="node-search" className="sr-only">Search nodes</label>
           <Input
+            id="node-search"
             placeholder="Search by pubkey, city, or country..."
             value={filters.query || ''}
             onChange={(e) => updateFilter('query', e.target.value || undefined)}

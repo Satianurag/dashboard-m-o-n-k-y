@@ -83,6 +83,11 @@ export default function RootLayout({
         <V0Provider isV0={isV0}>
           <WalletContextProvider>
             <SidebarProvider>
+              {/* Accessibility: Skip to main content link */}
+              <a href="#main-content" className="skip-link">
+                Skip to main content
+              </a>
+
               {/* Mobile Header - only visible on mobile */}
               <MobileHeader mockData={mockData} />
 
@@ -91,7 +96,7 @@ export default function RootLayout({
                 <div className="hidden lg:block col-span-2 top-0 relative">
                   <DashboardSidebar />
                 </div>
-                <div className="col-span-1 lg:col-span-7">{children}</div>
+                <main id="main-content" className="col-span-1 lg:col-span-7">{children}</main>
                 <div className="col-span-3 hidden lg:block">
                   <div className="space-y-gap py-sides min-h-screen max-h-screen sticky top-0 overflow-clip">
                     <Widget />

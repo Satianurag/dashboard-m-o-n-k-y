@@ -73,7 +73,11 @@ export function NetworkChart({ data }: NetworkChartProps) {
         ))}
       </div>
 
-      <div className="h-[250px] w-full min-h-[250px]">
+      <div
+        className="h-[250px] w-full min-h-[250px]"
+        role="img"
+        aria-label={`${activeMetricConfig.label} chart showing network performance over time`}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>

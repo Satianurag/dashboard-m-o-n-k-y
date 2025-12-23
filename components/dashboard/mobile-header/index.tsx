@@ -19,13 +19,13 @@ export function MobileHeader({ mockData }: MobileHeaderProps) {
     <div className="lg:hidden h-header-mobile sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left: Sidebar Menu */}
-        <SidebarTrigger />
+        <SidebarTrigger aria-label="Open navigation menu" />
 
         {/* Center: Monkey Logo + Time */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="h-8 w-16 bg-primary rounded flex items-center justify-center">
-              <MonkeyIcon className="size-6 text-primary-foreground" />
+              <MonkeyIcon className="size-6 text-primary-foreground" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -33,13 +33,18 @@ export function MobileHeader({ mockData }: MobileHeaderProps) {
         <Sheet>
           {/* Right: Notifications Menu */}
           <SheetTrigger asChild>
-            <Button variant="secondary" size="icon" className="relative">
+            <Button
+              variant="secondary"
+              size="icon"
+              className="relative"
+              aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+            >
               {unreadCount > 0 && (
-                <Badge className="absolute border-2 border-background -top-1 -left-2 h-5 w-5 text-xs p-0 flex items-center justify-center">
+                <Badge className="absolute border-2 border-background -top-1 -left-2 h-5 w-5 text-xs p-0 flex items-center justify-center" aria-hidden="true">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </Badge>
               )}
-              <BellIcon className="size-4" />
+              <BellIcon className="size-4" aria-hidden="true" />
             </Button>
           </SheetTrigger>
 

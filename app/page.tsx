@@ -33,7 +33,7 @@ export default function DashboardOverview() {
 
   const isLoading = nodesLoading || statsLoading || historyLoading;
 
-  const lastUpdatedText = nodesUpdated 
+  const lastUpdatedText = nodesUpdated
     ? `Last updated ${nodesUpdated.toLocaleTimeString()}`
     : 'Connecting...';
 
@@ -67,13 +67,12 @@ export default function DashboardOverview() {
             <span className="text-xs text-muted-foreground uppercase tracking-wider">
               Network X-Score
             </span>
-            <span className={`text-2xl font-display ${
-              xScore.grade === 'S' ? 'text-yellow-400' :
-              xScore.grade === 'A' ? 'text-green-400' :
-              xScore.grade === 'B' ? 'text-blue-400' :
-              xScore.grade === 'C' ? 'text-orange-400' :
-              'text-red-400'
-            }`}>
+            <span className={`text-2xl font-display ${xScore.grade === 'S' ? 'text-yellow-400' :
+                xScore.grade === 'A' ? 'text-green-400' :
+                  xScore.grade === 'B' ? 'text-blue-400' :
+                    xScore.grade === 'C' ? 'text-orange-400' :
+                      'text-red-400'
+              }`}>
               {xScore.grade}
             </span>
           </div>
@@ -112,7 +111,12 @@ export default function DashboardOverview() {
           </span>
         </div>
         <div className="h-[400px]">
-          <Suspense fallback={<div className="w-full h-full flex items-center justify-center"><Skeleton className="w-32 h-32 rounded-full" /></div>}>
+          <Suspense fallback={
+            <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+              <Skeleton className="w-32 h-32 rounded-full animate-pulse" />
+              <span className="text-sm text-muted-foreground">Loading 3D Globe...</span>
+            </div>
+          }>
             {nodes && <Globe3D nodes={nodes} gossipEvents={gossipEvents || undefined} />}
           </Suspense>
         </div>
@@ -143,17 +147,16 @@ export default function DashboardOverview() {
               .sort((a, b) => b.performance.score - a.performance.score)
               .slice(0, 4)
               .map((node, index) => (
-                <div 
+                <div
                   key={node.id}
                   className="p-4 rounded-lg bg-accent/20 border border-border hover:border-primary/50 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-lg font-display text-primary">#{index + 1}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${
-                      node.performance.tier === 'excellent' ? 'bg-green-500/20 text-green-400' :
-                      node.performance.tier === 'good' ? 'bg-blue-500/20 text-blue-400' :
-                      'bg-yellow-500/20 text-yellow-400'
-                    }`}>
+                    <span className={`text-xs px-2 py-0.5 rounded ${node.performance.tier === 'excellent' ? 'bg-green-500/20 text-green-400' :
+                        node.performance.tier === 'good' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-yellow-500/20 text-yellow-400'
+                      }`}>
                       {node.performance.tier.toUpperCase()}
                     </span>
                   </div>
