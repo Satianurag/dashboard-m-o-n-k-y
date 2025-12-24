@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type { ChatState, ChatMessage, ChatConversation } from "@/types/chat";
 import { mockChatData } from "@/data/chat-mock";
+import { fetchConversations, getCurrentUser, sendMessageToSupabase, mapSupabaseMessageToChatMessage } from "@/lib/chat-utils";
+import { supabase } from "@/lib/supabase";
 
 type ChatComponentState = {
   state: ChatState;
@@ -12,6 +14,7 @@ interface ChatStore {
   chatState: ChatComponentState;
   conversations: ChatConversation[];
   newMessage: string;
+  isInitialized: boolean;
 
   // Actions
   setChatState: (state: ChatComponentState) => void;
@@ -21,6 +24,7 @@ interface ChatStore {
   openConversation: (conversationId: string) => void;
   goBack: () => void;
   toggleExpanded: () => void;
+  initializeChat: () => void;
 }
 
 const chatStore = create<ChatStore>((set, get) => ({
@@ -30,6 +34,7 @@ const chatStore = create<ChatStore>((set, get) => ({
   },
   conversations: mockChatData.conversations,
   newMessage: "",
+  isInitialized: false,
 
   // Actions
   setChatState: (chatState) => set({ chatState }),
@@ -38,29 +43,75 @@ const chatStore = create<ChatStore>((set, get) => ({
 
   setNewMessage: (newMessage) => set({ newMessage }),
 
-  handleSendMessage: () => {
+  initializeChat: async () => {
+    const { isInitialized } = get();
+    if (isInitialized) return;
+
+    set({ isInitialized: true });
+
+    // 1. Fetch initial data
+    const convs = await fetchConversations();
+    set({ conversations: convs });
+
+    // 2. Subscribe to realtime messages
+    supabase
+      .channel('public:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const newMsg = payload.new;
+        const currentUser = getCurrentUser();
+
+        const chatMsg = mapSupabaseMessageToChatMessage(newMsg, currentUser.id);
+
+        // Update store
+        set((state) => {
+          const updatedConversations = state.conversations.map((conv) => {
+            if (conv.id === newMsg.conversation_id) {
+              // Avoid duplicates if we optimistically added it
+              if (conv.messages.some(m => m.id === chatMsg.id)) return conv;
+
+              return {
+                ...conv,
+                messages: [...conv.messages, chatMsg],
+                lastMessage: chatMsg,
+                // Increment unread if chat is closed or different conversation active
+                unreadCount: (state.chatState.state !== 'conversation' || state.chatState.activeConversation !== conv.id)
+                  ? conv.unreadCount + 1
+                  : 0
+              };
+            }
+            return conv;
+          });
+          return { conversations: updatedConversations };
+        });
+      })
+      .subscribe();
+  },
+
+  handleSendMessage: async () => {
     const { newMessage, conversations, chatState } = get();
-    const activeConv = conversations.find(
-      (conv) => conv.id === chatState.activeConversation
-    );
+    const activeConvId = chatState.activeConversation;
+    const activeConv = conversations.find(c => c.id === activeConvId);
 
     if (!newMessage.trim() || !activeConv) return;
 
-    const message: ChatMessage = {
-      id: `msg-${Date.now()}`,
+    // Optimistic update
+    const currentUser = getCurrentUser();
+    const tempId = `msg-${Date.now()}`;
+    const optimisticMsg: ChatMessage = {
+      id: tempId,
       content: newMessage.trim(),
       timestamp: new Date().toISOString(),
-      senderId: mockChatData.currentUser.id,
+      senderId: currentUser.id,
       isFromCurrentUser: true,
     };
 
     const updatedConversations = conversations.map((conv) =>
       conv.id === activeConv.id
         ? {
-            ...conv,
-            messages: [...conv.messages, message],
-            lastMessage: message,
-          }
+          ...conv,
+          messages: [...conv.messages, optimisticMsg],
+          lastMessage: optimisticMsg,
+        }
         : conv
     );
 
@@ -68,6 +119,9 @@ const chatStore = create<ChatStore>((set, get) => ({
       conversations: updatedConversations,
       newMessage: "",
     });
+
+    // Send to Supabase
+    await sendMessageToSupabase(newMessage.trim(), activeConv.id, currentUser.id);
   },
 
   openConversation: (conversationId) => {
@@ -117,6 +171,7 @@ export const useChatState = () => {
   const openConversation = chatStore((state) => state.openConversation);
   const goBack = chatStore((state) => state.goBack);
   const toggleExpanded = chatStore((state) => state.toggleExpanded);
+  const initializeChat = chatStore((state) => state.initializeChat);
 
   // Computed values
   const totalUnreadCount = conversations.reduce(
@@ -141,5 +196,6 @@ export const useChatState = () => {
     openConversation,
     goBack,
     toggleExpanded,
+    initializeChat,
   };
 };

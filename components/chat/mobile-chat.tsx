@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -15,9 +15,13 @@ import { useChatState } from "./use-chat-state";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function MobileChat() {
-  const { totalUnreadCount, chatState, setChatState } = useChatState();
+  const { totalUnreadCount, chatState, setChatState, initializeChat } = useChatState();
   const isMobile = useIsMobile();
   const hasNewMessages = totalUnreadCount > 0;
+
+  useEffect(() => {
+    initializeChat();
+  }, [initializeChat]);
 
   // Sheet should be open for both "expanded" and "conversation" states
   const isOpen =

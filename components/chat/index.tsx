@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { useChatState } from "./use-chat-state";
@@ -22,7 +22,12 @@ export default function Chat() {
     openConversation,
     goBack,
     toggleExpanded,
+    initializeChat,
   } = useChatState();
+
+  useEffect(() => {
+    initializeChat();
+  }, [initializeChat]);
 
   const isExpanded = chatState.state !== "collapsed";
 

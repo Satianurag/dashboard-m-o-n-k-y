@@ -609,53 +609,6 @@ function transformClusterNodeToFull(
   };
 }
 
-function transformClusterNodeData(node: any, index: number): PNode {
-  const pubkey = node.pubkey || node.nodePubkey || `devnet_node_${index}`;
-  const hash = hashPubkey(pubkey);
-  const location = getNodeLocation(pubkey, index);
-  const ip = node.gossip?.split(':')[0] || node.rpc?.split(':')[0] || generateDeterministicIP(pubkey);
-
-  return {
-    id: `pnode_${index}`,
-    pubkey,
-    ip,
-    port: parseInt(node.gossip?.split(':')[1]) || 8899,
-    version: node.version || '0.7.0',
-    status: node.delinquent ? 'offline' : 'online',
-    uptime: node.delinquent ? 0 : 80 + (hash % 20),
-    lastSeen: new Date().toISOString(),
-    location,
-    metrics: {
-      cpuPercent: 20 + (hash % 30),
-      memoryPercent: 40 + (hash % 25),
-      storageUsedGB: 100 + (hash % 400),
-      storageCapacityGB: 1000,
-      responseTimeMs: 50 + (hash % 50),
-    },
-    performance: {
-      score: node.delinquent ? 0 : 60 + (hash % 40),
-      tier: getTier(node.delinquent ? 0 : 60 + (hash % 40)),
-    },
-    gossip: {
-      peersConnected: 10 + (hash % 40),
-      messagesReceived: 10000 + (hash % 50000),
-      messagesSent: 8000 + (hash % 40000),
-    },
-    staking: {
-      commission: hash % 10,
-      delegatedStake: 10000 + (hash % 100000),
-      activatedStake: 9000 + (hash % 90000),
-      apy: 5 + (hash % 30) / 10,
-      lastVote: Date.now() - (hash % 10000),
-      rootSlot: 85000000 + index,
-    },
-    history: {
-      uptimeHistory: Array.from({ length: 30 }, () => 80 + (hash % 20)),
-      latencyHistory: Array.from({ length: 30 }, () => 50 + (hash % 50)),
-      scoreHistory: Array.from({ length: 30 }, () => 60 + (hash % 40)),
-    },
-  };
-}
 
 // ============================================================
 // NETWORK STATS
@@ -700,16 +653,6 @@ export async function getNetworkStats(): Promise<NetworkStats> {
 // NETWORK TPS (Real from performance samples)
 // ============================================================
 
-export async function getNetworkTPS(): Promise<{ tps: number; samples: number }> {
-  const samples = await fetchPerformanceSamples(10);
-  if (samples.length === 0) return { tps: 0, samples: 0 };
-
-  const totalTx = samples.reduce((acc, s) => acc + s.numTransactions, 0);
-  const totalSecs = samples.reduce((acc, s) => acc + s.samplePeriodSecs, 0);
-  const tps = totalSecs > 0 ? totalTx / totalSecs : 0;
-
-  return { tps, samples: samples.length };
-}
 
 // ============================================================
 // NETWORK EVENTS (Real-time style based on actual nodes)
