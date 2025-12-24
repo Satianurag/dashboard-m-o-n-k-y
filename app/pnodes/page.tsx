@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ExportButton } from "@/components/dashboard/export-button";
 import { exportPNodes, type ExportFormat } from "@/lib/export-utils";
-import { CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Minus, ExternalLink } from "lucide-react";
+import { CheckCircle, XCircle, AlertCircle, TrendingUp, TrendingDown, Minus, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import type { PNode } from "@/types/pnode";
 
 function LoadingState() {
@@ -123,6 +123,8 @@ export default function PNodesPage() {
   const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'score' | 'uptime' | 'latency' | 'storage'>('score');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25;
 
   const displayNodes = useMemo(() => {
     const toSort = filteredNodes.length > 0 ? filteredNodes : (nodes || []);
@@ -137,6 +139,12 @@ export default function PNodesPage() {
       return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
     });
   }, [filteredNodes, nodes, sortBy, sortOrder]);
+
+  const totalPages = Math.ceil(displayNodes.length / itemsPerPage);
+  const paginatedNodes = displayNodes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Reset to page 1 when filters change
+  useMemo(() => setCurrentPage(1), [filteredNodes.length, sortBy, sortOrder]);
 
   const toggleSort = (field: typeof sortBy) => {
     if (sortBy === field) {
@@ -234,7 +242,7 @@ export default function PNodesPage() {
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3">
-        {displayNodes.slice(0, 30).map((node) => (
+        {paginatedNodes.map((node) => (
           <NodeCard
             key={node.id}
             node={node}
@@ -242,11 +250,6 @@ export default function PNodesPage() {
             onToggle={() => toggleSelect(node.id)}
           />
         ))}
-        {displayNodes.length > 30 && (
-          <div className="text-center text-sm text-muted-foreground py-3">
-            Showing 30 of {displayNodes.length} nodes
-          </div>
-        )}
       </div>
 
       {/* Desktop Table View */}
@@ -304,7 +307,7 @@ export default function PNodesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {displayNodes.slice(0, 50).map((node) => (
+              {paginatedNodes.map((node) => (
                 <tr
                   key={node.id}
                   className={`hover:bg-accent/10 transition-colors ${selectedNodes.includes(node.id) ? 'bg-primary/10' : ''}`}
@@ -351,11 +354,70 @@ export default function PNodesPage() {
             </tbody>
           </table>
         </div>
-        {displayNodes.length > 50 && (
-          <div className="px-4 py-3 border-t border-border bg-accent/10 text-center text-sm text-muted-foreground">
-            Showing 50 of {displayNodes.length} nodes
+        {/* Pagination Controls */}
+        <div className="px-6 py-4 border-t border-border/50 bg-gradient-to-r from-accent/5 via-accent/10 to-accent/5 backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-muted-foreground font-mono">
+              <span className="text-primary font-semibold">
+                {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, displayNodes.length)}
+              </span>
+              {' '}of{' '}
+              <span className="text-primary font-semibold">{displayNodes.length}</span>
+              {' '}nodes
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-9 w-9 p-0 border-2 hover:border-primary/50 hover:bg-primary/10 transition-all duration-200 disabled:opacity-30"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span className="sr-only">Previous page</span>
+              </Button>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-background/50 border border-border/50">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  const isActive = currentPage === pageNum;
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={isActive ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-9 h-9 p-0 font-mono transition-all duration-200 ${isActive
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105'
+                          : 'hover:bg-accent/50 hover:scale-105'
+                        }`}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="h-9 w-9 p-0 border-2 hover:border-primary/50 hover:bg-primary/10 transition-all duration-200 disabled:opacity-30"
+              >
+                <ChevronRight className="w-4 h-4" />
+                <span className="sr-only">Next page</span>
+              </Button>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </DashboardPageLayout>
   );

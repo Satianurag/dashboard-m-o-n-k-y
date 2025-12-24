@@ -1,0 +1,18 @@
+{
+    "dashboardStats": [],
+    "chartData": {
+        "week": [],
+        "month": [],
+        "year": []
+    },
+    "rebelsRanking": [],
+    "securityStatus": [],
+    "notifications": [],
+    "widgetData": {
+        "location": "",
+        "timezone": "",
+        "temperature": "",
+        "weather": "",
+        "date": ""
+    }
+}

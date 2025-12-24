@@ -3,7 +3,7 @@
 import DashboardPageLayout from "@/components/dashboard/layout";
 import GlobeIcon from "@/components/icons/globe";
 import { usePNodes, useGossipHealth, useStorageDistribution } from "@/hooks/use-pnode-data";
-import { NetworkGraph } from "@/components/dashboard/network-graph";
+import { LeafletMap } from "@/components/dashboard/leaflet-map";
 import { GossipHealthPanel, StorageDistributionPanel } from "@/components/dashboard/gossip-health";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -82,7 +82,7 @@ export default function NetworkPage() {
           </div>
         </div>
         <div className="h-[400px]">
-          {nodes && <NetworkGraph nodes={nodes} />}
+          {nodes && <LeafletMap nodes={nodes} />}
         </div>
       </div>
 
