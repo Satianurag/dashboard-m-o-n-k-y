@@ -15,12 +15,6 @@ export default function NotificationItem({
   onMarkAsRead,
   onDelete,
 }: NotificationItemProps) {
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -33,7 +27,7 @@ export default function NotificationItem({
     } else if (hours < 24) {
       return `${hours}h ago`;
     } else {
-      return date.toLocaleDateString("en-US");
+      return date.toLocaleDateString();
     }
   };
 
@@ -128,7 +122,7 @@ export default function NotificationItem({
               </p>
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs text-muted-foreground">
-                  {mounted ? formatTimestamp(notification.timestamp) : null}
+                  {formatTimestamp(notification.timestamp)}
                 </span>
               </div>
             </div>

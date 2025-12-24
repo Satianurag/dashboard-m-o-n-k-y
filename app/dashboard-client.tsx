@@ -3,8 +3,11 @@
 import { Suspense, lazy } from 'react';
 import DashboardPageLayout from "@/components/dashboard/layout";
 import BracketsIcon from "@/components/icons/brackets";
+import GearIcon from "@/components/icons/gear";
+import ProcessorIcon from "@/components/icons/proccesor";
+import BoomIcon from "@/components/icons/boom";
 import { usePNodes, useNetworkStats, usePerformanceHistory, useGossipEvents, useXScore } from "@/hooks/use-pnode-data";
-import { NetworkStatsGrid } from "@/components/dashboard/network-stats";
+import DashboardStat from "@/components/dashboard/stat";
 import { NetworkChart } from "@/components/dashboard/network-chart";
 import { InfoTooltip } from "@/components/dashboard/info-tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -67,7 +70,33 @@ export default function DashboardOverview({
         icon: BracketsIcon,
       }}
     >
-      {stats && <NetworkStatsGrid stats={stats} />}
+      {/* Stats with arrows - exactly like reference */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <DashboardStat
+          label="TOTAL PNODES"
+          value={stats?.totalNodes?.toString() || "0"}
+          description={`${stats?.onlineNodes || 0} ONLINE`}
+          icon={GearIcon}
+          intent="positive"
+          direction="up"
+        />
+        <DashboardStat
+          label="NETWORK HEALTH"
+          value={`${stats?.networkHealth?.toFixed(1) || "0"}%`}
+          description={stats?.degradedNodes > 0 ? `${stats?.degradedNodes} DEGRADED` : "ALL SYSTEMS NORMAL"}
+          icon={ProcessorIcon}
+          intent="negative"
+          direction="down"
+        />
+        <DashboardStat
+          label="AVG RESPONSE"
+          value={`${stats?.averageResponseTime?.toFixed(0) || "0"}ms`}
+          description={`${stats?.averageUptime?.toFixed(1) || "0"}% AVG UPTIME`}
+          icon={BoomIcon}
+          intent={stats?.averageResponseTime < 100 ? "positive" : "neutral"}
+          tag={stats?.averageResponseTime < 100 ? "FAST" : undefined}
+        />
+      </div>
 
       {xScore && (
         <div className="rounded-lg border-2 border-border p-4">

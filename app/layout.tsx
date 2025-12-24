@@ -81,7 +81,7 @@ export default function RootLayout({
                 <div className="col-span-3 hidden lg:block">
                   <div className="fixed right-[var(--sides)] top-0 w-[calc((100vw-var(--sides)*2-var(--gap)*2)/12*3)] space-y-gap py-sides h-screen overflow-clip">
                     <Widget />
-                    <Notifications />
+                    <Notifications initialNotifications={mockData.notifications} />
                     <Chat />
                   </div>
                 </div>
