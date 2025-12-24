@@ -11,7 +11,7 @@ import Notifications from "@/components/dashboard/notifications";
 import { MobileChat } from "@/components/chat/mobile-chat";
 import Chat from "@/components/chat";
 import { WalletContextProvider } from "@/contexts/wallet-context";
-import { LiveNetworkPulse } from "@/components/dashboard/live-pulse";
+// LiveNetworkPulse moved to app/page.tsx for performance
 import type { MockData } from "@/types/dashboard";
 
 import { layoutMockData as mockData } from "@/server/api/mock-data";
@@ -56,14 +56,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="pNode Analytics" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
 
-        {/* Font preloads */}
-        <link
-          rel="preload"
-          href="/fonts/Rebels-Fett.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
+        {/* Font optimization handled by next/font/local */}
       </head>
       <body
         className={`${rebelGrotesk.variable} ${robotoMono.variable} antialiased`}
@@ -86,7 +79,7 @@ export default function RootLayout({
                 </div>
                 <main id="main-content" className="col-span-1 lg:col-span-7">{children}</main>
                 <div className="col-span-3 hidden lg:block">
-                  <div className="space-y-gap py-sides min-h-screen max-h-screen sticky top-0 overflow-clip">
+                  <div className="fixed right-[var(--sides)] top-0 w-[calc((100vw-var(--sides)*2-var(--gap)*2)/12*3)] space-y-gap py-sides h-screen overflow-clip">
                     <Widget />
                     <Notifications />
                     <Chat />
@@ -94,8 +87,7 @@ export default function RootLayout({
                 </div>
               </div>
 
-              {/* Live Network Pulse Footer */}
-              <LiveNetworkPulse />
+              {/* LiveNetworkPulse moved to dashboard page for performance */}
 
               {/* Mobile Chat - floating CTA with drawer */}
               <MobileChat />

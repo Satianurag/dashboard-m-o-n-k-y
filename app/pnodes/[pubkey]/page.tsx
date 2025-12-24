@@ -37,6 +37,13 @@ import {
     Tooltip,
 } from 'recharts';
 import type { PNode } from "@/types/pnode";
+import dynamic from 'next/dynamic';
+
+// Dynamically import Leaflet map component (no SSR)
+const SingleNodeMap = dynamic(
+    () => import('@/components/dashboard/leaflet-map/single-node-map').then(mod => mod.SingleNodeMap),
+    { ssr: false, loading: () => <div className="w-full h-[200px] bg-accent/20 rounded-lg animate-pulse" /> }
+);
 
 // Note: In Next.js 15+, params is a Promise
 interface PageProps {
@@ -245,9 +252,9 @@ export default function NodeDetailPage({ params }: PageProps) {
                             <div className="text-xs text-muted-foreground uppercase">Score</div>
                         </div>
                         <div className={`px-3 py-1 rounded text-sm uppercase font-bold ${node.performance.tier === 'excellent' ? 'bg-green-500/20 text-green-400' :
-                                node.performance.tier === 'good' ? 'bg-blue-500/20 text-blue-400' :
-                                    node.performance.tier === 'fair' ? 'bg-yellow-500/20 text-yellow-400' :
-                                        'bg-red-500/20 text-red-400'
+                            node.performance.tier === 'good' ? 'bg-blue-500/20 text-blue-400' :
+                                node.performance.tier === 'fair' ? 'bg-yellow-500/20 text-yellow-400' :
+                                    'bg-red-500/20 text-red-400'
                             }`}>
                             {node.performance.tier}
                         </div>
@@ -365,6 +372,16 @@ export default function NodeDetailPage({ params }: PageProps) {
                             <span className="font-mono text-sm">{new Date(node.lastSeen).toLocaleString()}</span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Node Location Map */}
+            <div className="rounded-lg border-2 border-border overflow-hidden mb-6">
+                <div className="px-4 py-2 border-b border-border bg-accent/20">
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Node Location</span>
+                </div>
+                <div className="h-[300px]">
+                    <SingleNodeMap node={node} />
                 </div>
             </div>
 

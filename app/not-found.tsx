@@ -1,4 +1,3 @@
-import React from "react";
 import Image from "next/image";
 import DashboardPageLayout from "@/components/dashboard/layout";
 import CuteRobotIcon from "@/components/icons/cute-robot";
@@ -30,7 +29,7 @@ export default function NotFound() {
             Not found, yet
           </h1>
           <p className="text-sm max-w-sm text-center text-muted-foreground text-balance">
-            Fork on v0 and start promoting your way to new pages.
+            This page doesn&apos;t exist or is still under development.
           </p>
         </div>
       </div>

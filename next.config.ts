@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
-    qualities: [75, 90],
+    remotePatterns: [
+      { protocol: 'https', hostname: '**' },
+    ],
   },
   outputFileTracingRoot: path.resolve(__dirname),
   turbopack: {

@@ -152,24 +152,9 @@ const data = {
           icon: NetworkIcon,
         },
         {
-          title: "Versions",
-          url: "/versions",
-          icon: LayersIcon,
-        },
-      ],
-    },
-    {
-      title: "Tools",
-      items: [
-        {
           title: "Alerts",
           url: "/alerts",
           icon: BellIcon,
-        },
-        {
-          title: "Projections",
-          url: "/projections",
-          icon: TrendingUpIcon,
         },
       ],
     },

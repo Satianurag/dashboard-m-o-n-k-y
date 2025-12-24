@@ -35,6 +35,8 @@ export async function fetchRPC<T>(method: string, params: unknown[] = []): Promi
                 method,
                 params,
             }),
+            // Next.js cache: persist across serverless instances
+            next: { revalidate: 30 },
         });
 
         if (!response.ok) return null;

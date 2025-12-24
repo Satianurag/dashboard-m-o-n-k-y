@@ -133,7 +133,11 @@ async function getMergedNodeData(): Promise<Map<string, Partial<PNode>>> {
     return nodeMap;
 }
 
-function mapSupabaseToPNode(row: any): PNode {
+function mapSupabaseToPNode(row: any, index: number): PNode {
+    // Ensure location data always has a fallback
+    const hasValidLocation = row.location && row.location.city && row.location.city !== 'Unknown';
+    const location = hasValidLocation ? row.location : getNodeLocation(row.pubkey, index);
+
     return {
         id: `pnode_${row.credits_rank - 1}`,
         pubkey: row.pubkey,
@@ -143,7 +147,7 @@ function mapSupabaseToPNode(row: any): PNode {
         status: row.status as 'online' | 'offline' | 'degraded',
         uptime: row.uptime,
         lastSeen: row.last_seen,
-        location: row.location,
+        location,
         credits: row.credits,
         creditsRank: row.credits_rank,
         metrics: row.metrics,
@@ -168,7 +172,7 @@ export async function getClusterNodes(): Promise<PNode[]> {
 
         if (!error && data && data.length > 0) {
             console.log(`Fetched ${data.length} pNodes from Supabase cache.`);
-            return data.map(mapSupabaseToPNode);
+            return data.map((row, index) => mapSupabaseToPNode(row, index));
         }
 
         if (error) {

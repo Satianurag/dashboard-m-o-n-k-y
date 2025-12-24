@@ -180,8 +180,12 @@ export async function getClusterNodes(): Promise<PNode[]> {
 
     // Fallback to original client-side logic
     console.log('Using client-side fallback for pNode data.');
-    const podCredits = await fetchPodCredits();
-    const mergedData = await getMergedNodeData();
+
+    // OPTIMIZATION: Parallel fetching instead of waterfall
+    const [podCredits, mergedData] = await Promise.all([
+        fetchPodCredits(),
+        getMergedNodeData()
+    ]);
 
     if (!podCredits || !podCredits.pods_credits) {
         return Array.from(mergedData.values()).map((node, i) =>
