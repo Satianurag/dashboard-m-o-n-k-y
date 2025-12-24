@@ -35,6 +35,62 @@ function setCache<T>(key: string, data: T): void {
 }
 
 // ============================================================
+// RPC RESPONSE INTERFACES
+// ============================================================
+
+interface ClusterNode {
+  pubkey: string;
+  gossip?: string;
+  rpc?: string;
+  tpu?: string;
+  version?: string;
+  featureSet?: number;
+  shredVersion?: number;
+}
+
+interface VoteAccount {
+  votePubkey: string;
+  nodePubkey: string;
+  activatedStake: number;
+  epochCredits: [number, number, number][];
+  commission: number;
+  lastVote: number;
+  rootSlot: number;
+}
+
+interface VoteAccountsResponse {
+  current: VoteAccount[];
+  delinquent: VoteAccount[];
+}
+
+interface BlockProductionResponse {
+  byIdentity: Record<string, [number, number]>; // [leaderSlots, blocksProduced]
+  range: { firstSlot: number; lastSlot: number };
+}
+
+interface PerformanceSample {
+  slot: number;
+  numTransactions: number;
+  numSlots: number;
+  samplePeriodSecs: number;
+}
+
+interface GeolocationData {
+  status: 'success' | 'fail';
+  country?: string;
+  countryCode?: string;
+  city?: string;
+  lat?: number;
+  lon?: number;
+  isp?: string;
+  org?: string;
+  as?: string;
+}
+
+// Geolocation API proxy
+const GEOLOCATION_API = '/api/geolocation';
+
+// ============================================================
 // POD CREDITS API INTEGRATION
 // ============================================================
 
@@ -69,9 +125,9 @@ async function fetchPodCredits(): Promise<PodCreditsResponse | null> {
 // DEVNET RPC INTEGRATION
 // ============================================================
 
-async function fetchRPC(method: string, params: unknown[] = []): Promise<unknown> {
+async function fetchRPC<T>(method: string, params: unknown[] = []): Promise<T | null> {
   const cacheKey = `rpc:${method}:${JSON.stringify(params)}`;
-  const cached = getCached(cacheKey);
+  const cached = getCached<T>(cacheKey);
   if (cached) return cached;
 
   try {
@@ -88,9 +144,9 @@ async function fetchRPC(method: string, params: unknown[] = []): Promise<unknown
 
     if (response.ok) {
       const data = await response.json();
-      if (data.result) {
+      if (data.result !== undefined) {
         setCache(cacheKey, data.result);
-        return data.result;
+        return data.result as T;
       }
     }
   } catch (error) {
@@ -101,7 +157,109 @@ async function fetchRPC(method: string, params: unknown[] = []): Promise<unknown
 }
 
 // ============================================================
-// LOCATION DATA (Deterministic based on pubkey)
+// REAL DATA FETCHING FUNCTIONS
+// ============================================================
+
+async function fetchClusterNodes(): Promise<ClusterNode[]> {
+  const result = await fetchRPC<ClusterNode[]>('getClusterNodes');
+  return result || [];
+}
+
+async function fetchVoteAccounts(): Promise<VoteAccountsResponse | null> {
+  return fetchRPC<VoteAccountsResponse>('getVoteAccounts');
+}
+
+async function fetchBlockProduction(): Promise<BlockProductionResponse | null> {
+  const result = await fetchRPC<{ value: BlockProductionResponse }>('getBlockProduction');
+  return result?.value || null;
+}
+
+async function fetchPerformanceSamples(limit: number = 10): Promise<PerformanceSample[]> {
+  const result = await fetchRPC<PerformanceSample[]>('getRecentPerformanceSamples', [limit]);
+  return result || [];
+}
+
+// Calculate real TPS from performance samples
+async function calculateNetworkTPS(): Promise<number> {
+  const samples = await fetchPerformanceSamples(5);
+  if (samples.length === 0) return 0;
+
+  const totalTx = samples.reduce((acc, s) => acc + s.numTransactions, 0);
+  const totalSecs = samples.reduce((acc, s) => acc + s.samplePeriodSecs, 0);
+  return totalSecs > 0 ? totalTx / totalSecs : 0;
+}
+
+// Calculate real skip rate from block production
+async function calculateSkipRate(): Promise<{ overall: number; byValidator: Map<string, number> }> {
+  const blockProd = await fetchBlockProduction();
+  if (!blockProd) return { overall: 0, byValidator: new Map() };
+
+  let totalLeaderSlots = 0;
+  let totalBlocksProduced = 0;
+  const byValidator = new Map<string, number>();
+
+  for (const [pubkey, [leaderSlots, blocksProduced]] of Object.entries(blockProd.byIdentity)) {
+    totalLeaderSlots += leaderSlots;
+    totalBlocksProduced += blocksProduced;
+    const skipRate = leaderSlots > 0 ? ((leaderSlots - blocksProduced) / leaderSlots) * 100 : 0;
+    byValidator.set(pubkey, skipRate);
+  }
+
+  const overall = totalLeaderSlots > 0
+    ? ((totalLeaderSlots - totalBlocksProduced) / totalLeaderSlots) * 100
+    : 0;
+
+  return { overall, byValidator };
+}
+
+// Fetch geolocation for an IP
+async function fetchGeolocation(ip: string): Promise<GeolocationData | null> {
+  const cacheKey = `geo:${ip}`;
+  const cached = getCached<GeolocationData>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(`${GEOLOCATION_API}?ip=${encodeURIComponent(ip)}`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === 'success') {
+        setCache(cacheKey, data);
+        return data;
+      }
+    }
+  } catch (error) {
+    console.error(`Geolocation error for ${ip}:`, error);
+  }
+  return null;
+}
+
+// Batch fetch geolocations
+async function fetchBatchGeolocation(ips: string[]): Promise<Record<string, GeolocationData>> {
+  const cacheKey = `geo_batch:${ips.slice(0, 5).join(',')}`;
+  const cached = getCached<Record<string, GeolocationData>>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(GEOLOCATION_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ips }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.results) {
+        setCache(cacheKey, data.results);
+        return data.results;
+      }
+    }
+  } catch (error) {
+    console.error('Batch geolocation error:', error);
+  }
+  return {};
+}
+
+// ============================================================
+// LOCATION DATA (Fallback for unknown locations)
 // ============================================================
 
 const NODE_LOCATIONS = [
@@ -203,22 +361,108 @@ function getTier(score: number): 'excellent' | 'good' | 'fair' | 'poor' {
 // MAIN DATA FETCHING - getClusterNodes()
 // ============================================================
 
+// Cache for merged node data
+let mergedNodeDataCache: { data: Map<string, Partial<PNode>>; timestamp: number } | null = null;
+const MERGED_CACHE_DURATION = 30000; // 30 seconds
+
+async function getMergedNodeData(): Promise<Map<string, Partial<PNode>>> {
+  if (mergedNodeDataCache && Date.now() - mergedNodeDataCache.timestamp < MERGED_CACHE_DURATION) {
+    return mergedNodeDataCache.data;
+  }
+
+  const nodeMap = new Map<string, Partial<PNode>>();
+
+  // Fetch real cluster nodes for IP, version, ports
+  const clusterNodes = await fetchClusterNodes();
+  for (const node of clusterNodes) {
+    const ip = node.gossip?.split(':')[0] || node.rpc?.split(':')[0] || '';
+    const port = parseInt(node.gossip?.split(':')[1] || '8000');
+    nodeMap.set(node.pubkey, {
+      pubkey: node.pubkey,
+      ip,
+      port,
+      version: node.version || '0.7.0',
+    });
+  }
+
+  // Fetch real vote accounts for staking data
+  const voteAccounts = await fetchVoteAccounts();
+  if (voteAccounts) {
+    const allVotes = [...voteAccounts.current, ...voteAccounts.delinquent];
+    for (const va of allVotes) {
+      const existing = nodeMap.get(va.nodePubkey) || { pubkey: va.nodePubkey };
+      // Calculate APY from epoch credits (simplified: last epoch credits / stake * 100)
+      const lastCredits = va.epochCredits.length > 0 ? va.epochCredits[va.epochCredits.length - 1] : [0, 0, 0];
+      const epochCreditsDelta = lastCredits[1] - lastCredits[2];
+      const apy = va.activatedStake > 0 ? (epochCreditsDelta / va.activatedStake) * 100 * 365 : 5;
+
+      nodeMap.set(va.nodePubkey, {
+        ...existing,
+        staking: {
+          commission: va.commission,
+          delegatedStake: va.activatedStake,
+          activatedStake: va.activatedStake,
+          apy: Math.min(15, Math.max(3, apy)), // Clamp between 3-15%
+          lastVote: va.lastVote,
+          rootSlot: va.rootSlot,
+        },
+      });
+    }
+  }
+
+  // Batch fetch geolocation for all IPs
+  const ips = Array.from(nodeMap.values())
+    .map(n => n.ip)
+    .filter((ip): ip is string => !!ip && ip.length > 0);
+
+  if (ips.length > 0) {
+    const geoData = await fetchBatchGeolocation(ips.slice(0, 45)); // Rate limit
+    for (const [pubkey, node] of nodeMap) {
+      if (node.ip && geoData[node.ip]) {
+        const geo = geoData[node.ip];
+        nodeMap.set(pubkey, {
+          ...node,
+          location: {
+            country: geo.country || 'Unknown',
+            countryCode: geo.countryCode || 'XX',
+            city: geo.city || 'Unknown',
+            lat: geo.lat || 0,
+            lng: geo.lon || 0,
+            datacenter: geo.org || geo.isp || 'Unknown',
+            asn: geo.as?.split(' ')[0] || 'Unknown',
+          },
+        });
+      }
+    }
+  }
+
+  mergedNodeDataCache = { data: nodeMap, timestamp: Date.now() };
+  return nodeMap;
+}
+
 export async function getClusterNodes(): Promise<PNode[]> {
   try {
     // Primary: Fetch from Pod Credits API (216 real nodes)
     const podCredits = await fetchPodCredits();
 
+    // Fetch real data to merge
+    const realNodeData = await getMergedNodeData();
+
     if (podCredits?.pods_credits && podCredits.pods_credits.length > 0) {
       // Sort by credits descending for ranking
       const sortedPods = [...podCredits.pods_credits].sort((a, b) => b.credits - a.credits);
 
-      return sortedPods.map((pod, index) => transformPodToNode(pod, index, sortedPods.length));
+      return sortedPods.map((pod, index) =>
+        transformPodToNode(pod, index, sortedPods.length, realNodeData.get(pod.pod_id))
+      );
     }
 
-    // Fallback: Fetch from DevNet RPC (limited nodes)
-    const clusterData = await fetchRPC('getClusterNodes');
-    if (clusterData && Array.isArray(clusterData)) {
-      return clusterData.map((node: any, index: number) => transformClusterNodeData(node, index));
+    // Fallback: Use cluster nodes directly
+    const clusterNodes = await fetchClusterNodes();
+    if (clusterNodes.length > 0) {
+      return clusterNodes.map((node, index) =>
+        transformClusterNodeToFull(node, index, realNodeData.get(node.pubkey))
+      );
     }
 
     // No data available
@@ -233,7 +477,8 @@ export async function getClusterNodes(): Promise<PNode[]> {
 function transformPodToNode(
   pod: { credits: number; pod_id: string },
   index: number,
-  totalNodes: number
+  totalNodes: number,
+  realData?: Partial<PNode>
 ): PNode {
   const pubkey = pod.pod_id;
   const credits = pod.credits;
@@ -247,21 +492,36 @@ function transformPodToNode(
     credits > 5000 ? 'online' :
       credits > 0 ? 'degraded' : 'offline';
 
-  // Get deterministic location
-  const location = getNodeLocation(pubkey, index);
+  // Use real location if available, otherwise fallback
+  const location = realData?.location || getNodeLocation(pubkey, index);
 
-  // Calculate metrics based on credits (not random)
+  // Use real IP and version if available
+  const ip = realData?.ip || generateDeterministicIP(pubkey);
+  const port = realData?.port || 6000;
+  const version = realData?.version || '0.7.0';
+
+  // Calculate metrics based on credits
   const uptimeBase = credits > 0 ? 70 + (performance.score * 0.3) : 0;
   const cpuBase = status === 'online' ? 20 + (hash % 30) : 0;
   const memBase = status === 'online' ? 40 + (hash % 25) : 0;
   const latencyBase = status === 'online' ? 30 + (100 - performance.score) + (hash % 20) : 999;
 
+  // Use real staking data if available
+  const staking = realData?.staking || {
+    commission: (hash % 10),
+    delegatedStake: credits * 100,
+    activatedStake: credits * 90,
+    apy: 5 + (performance.score / 50),
+    lastVote: Date.now() - (100 - performance.score) * 1000,
+    rootSlot: 85000000 + index,
+  };
+
   return {
     id: `pnode_${index}`,
     pubkey,
-    ip: generateDeterministicIP(pubkey),
-    port: 6000,
-    version: '0.7.0', // Current Xandeum pNode version
+    ip,
+    port,
+    version,
     status,
     uptime: uptimeBase,
     lastSeen: new Date().toISOString(),
@@ -281,14 +541,7 @@ function transformPodToNode(
       messagesReceived: credits * 10,
       messagesSent: credits * 8,
     },
-    staking: {
-      commission: (hash % 10),
-      delegatedStake: credits * 100,
-      activatedStake: credits * 90,
-      apy: 5 + (performance.score / 50),
-      lastVote: Date.now() - (100 - performance.score) * 1000,
-      rootSlot: 85000000 + index,
-    },
+    staking,
     history: {
       uptimeHistory: Array.from({ length: 30 }, (_, i) =>
         Math.max(0, uptimeBase + Math.sin(i * 0.5) * 5)
@@ -299,6 +552,59 @@ function transformPodToNode(
       scoreHistory: Array.from({ length: 30 }, (_, i) =>
         Math.max(0, performance.score + Math.sin(i * 0.5) * 5)
       ),
+    },
+  };
+}
+
+// Transform cluster node to full PNode (fallback when no pod credits)
+function transformClusterNodeToFull(
+  node: ClusterNode,
+  index: number,
+  realData?: Partial<PNode>
+): PNode {
+  const pubkey = node.pubkey;
+  const hash = hashPubkey(pubkey);
+  const location = realData?.location || getNodeLocation(pubkey, index);
+  const ip = node.gossip?.split(':')[0] || node.rpc?.split(':')[0] || generateDeterministicIP(pubkey);
+
+  return {
+    id: `pnode_${index}`,
+    pubkey,
+    ip,
+    port: parseInt(node.gossip?.split(':')[1] || '8899'),
+    version: node.version || '0.7.0',
+    status: 'online',
+    uptime: 80 + (hash % 20),
+    lastSeen: new Date().toISOString(),
+    location,
+    metrics: {
+      cpuPercent: 20 + (hash % 30),
+      memoryPercent: 40 + (hash % 25),
+      storageUsedGB: 100 + (hash % 400),
+      storageCapacityGB: 1000,
+      responseTimeMs: 50 + (hash % 50),
+    },
+    performance: {
+      score: 60 + (hash % 40),
+      tier: getTier(60 + (hash % 40)),
+    },
+    gossip: {
+      peersConnected: 10 + (hash % 40),
+      messagesReceived: 10000 + (hash % 50000),
+      messagesSent: 8000 + (hash % 40000),
+    },
+    staking: realData?.staking || {
+      commission: hash % 10,
+      delegatedStake: 10000 + (hash % 100000),
+      activatedStake: 9000 + (hash % 90000),
+      apy: 5 + (hash % 30) / 10,
+      lastVote: Date.now() - (hash % 10000),
+      rootSlot: 85000000 + index,
+    },
+    history: {
+      uptimeHistory: Array.from({ length: 30 }, () => 80 + (hash % 20)),
+      latencyHistory: Array.from({ length: 30 }, () => 50 + (hash % 50)),
+      scoreHistory: Array.from({ length: 30 }, () => 60 + (hash % 40)),
     },
   };
 }
@@ -388,6 +694,21 @@ export async function getNetworkStats(): Promise<NetworkStats> {
     gossipMessages24h: nodes.reduce((acc, n) => acc + n.gossip.messagesReceived + n.gossip.messagesSent, 0),
     lastUpdated: new Date().toISOString(),
   };
+}
+
+// ============================================================
+// NETWORK TPS (Real from performance samples)
+// ============================================================
+
+export async function getNetworkTPS(): Promise<{ tps: number; samples: number }> {
+  const samples = await fetchPerformanceSamples(10);
+  if (samples.length === 0) return { tps: 0, samples: 0 };
+
+  const totalTx = samples.reduce((acc, s) => acc + s.numTransactions, 0);
+  const totalSecs = samples.reduce((acc, s) => acc + s.samplePeriodSecs, 0);
+  const tps = totalSecs > 0 ? totalTx / totalSecs : 0;
+
+  return { tps, samples: samples.length };
 }
 
 // ============================================================
@@ -545,21 +866,33 @@ export async function getStorageDistribution(): Promise<StorageDistribution[]> {
 
 export async function getEpochInfo(): Promise<EpochInfo> {
   try {
-    const epochData = await fetchRPC('getEpochInfo');
+    // Fetch real skip rate alongside epoch data
+    const [epochData, skipRateData] = await Promise.all([
+      fetchRPC<{
+        epoch: number;
+        slotIndex: number;
+        slotsInEpoch: number;
+        absoluteSlot: number;
+        blockHeight: number;
+      }>('getEpochInfo'),
+      calculateSkipRate(),
+    ]);
+
     if (epochData && typeof epochData === 'object') {
-      const data = epochData as any;
       const epochDuration = 2 * 24 * 60 * 60 * 1000;
-      const epochStart = Date.now() - (data.slotIndex / data.slotsInEpoch) * epochDuration;
+      const epochStart = Date.now() - (epochData.slotIndex / epochData.slotsInEpoch) * epochDuration;
 
       return {
-        currentEpoch: data.epoch || 209,
-        epochProgress: data.slotIndex && data.slotsInEpoch ? (data.slotIndex / data.slotsInEpoch) * 100 : 50,
+        currentEpoch: epochData.epoch || 209,
+        epochProgress: epochData.slotIndex && epochData.slotsInEpoch
+          ? (epochData.slotIndex / epochData.slotsInEpoch) * 100
+          : 50,
         epochStartTime: new Date(epochStart).toISOString(),
         epochEndTime: new Date(epochStart + epochDuration).toISOString(),
-        slotsCompleted: data.slotIndex || 200000,
-        totalSlots: data.slotsInEpoch || 432000,
-        blocksProduced: data.absoluteSlot || 85000000,
-        skipRate: 2.5,
+        slotsCompleted: epochData.slotIndex || 200000,
+        totalSlots: epochData.slotsInEpoch || 432000,
+        blocksProduced: epochData.blockHeight || epochData.absoluteSlot || 85000000,
+        skipRate: skipRateData.overall, // Real skip rate from block production
       };
     }
   } catch (error) {
