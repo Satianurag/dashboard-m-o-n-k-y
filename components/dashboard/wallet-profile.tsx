@@ -7,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import Image from "next/image";
 import XandeumLogo from "@/components/icons/xandeum-logo";
 import GearIcon from "@/components/icons/gear";
 import DotsVerticalIcon from "@/components/icons/dots-vertical";
@@ -14,17 +15,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const WalletIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
-    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
-    <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+    <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
   </svg>
 );
 
 const DisconnectIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-    <polyline points="16 17 21 12 16 7"/>
-    <line x1="21" x2="9" y1="12" y2="12"/>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" x2="9" y1="12" y2="12" />
   </svg>
 );
 
@@ -99,9 +100,12 @@ export function WalletProfile() {
                   className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
                 >
                   {wallet.adapter.icon && (
-                    <img
+                    <Image
                       src={wallet.adapter.icon}
                       alt={wallet.adapter.name}
+                      width={24}
+                      height={24}
+                      unoptimized
                       className="w-6 h-6"
                     />
                   )}

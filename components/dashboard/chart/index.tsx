@@ -10,11 +10,9 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import mockDataJson from "@/mock.json";
+import { layoutMockData as mockData } from "@/server/api/mock-data";
 import { Bullet } from "@/components/ui/bullet";
 import type { MockData, TimePeriod } from "@/types/dashboard";
-
-const mockData = mockDataJson as MockData;
 
 type ChartDataPoint = {
   date: string;

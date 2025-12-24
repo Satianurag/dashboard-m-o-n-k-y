@@ -1,36 +1,44 @@
-import { cn } from "@/lib/utils";
-import { cva, VariantProps } from "class-variance-authority";
-import React, { HTMLAttributes } from "react";
+"use client";
 
-export const bulletVariants = cva("rounded-[1.5px]", {
-  variants: {
-    variant: {
-      default: "bg-primary",
-      success: "bg-success",
-      warning: "bg-warning",
-      destructive: "bg-destructive",
-    },
-    size: {
-      sm: "size-2",
-      default: "size-2.5",
-      lg: "size-3",
-    },
-  },
-  defaultVariants: {
-    variant: "default",
-    size: "default",
-  },
-});
+import * as React from "react"
+import { cn } from "@/lib/utils"
+import { cva, type VariantProps } from "class-variance-authority"
 
-export interface BulletProps
-  extends VariantProps<typeof bulletVariants>,
-    HTMLAttributes<HTMLDivElement> {}
+const bulletVariants = cva(
+    "shrink-0 rounded-full",
+    {
+        variants: {
+            variant: {
+                default: "bg-primary",
+                success: "bg-green-500",
+                destructive: "bg-destructive",
+                warning: "bg-yellow-500",
+            },
+            size: {
+                default: "size-2",
+                sm: "size-1.5",
+                lg: "size-3",
+            },
+        },
+        defaultVariants: {
+            variant: "default",
+            size: "default",
+        },
+    }
+)
 
-export const Bullet = ({ variant, size, className, ...props }: BulletProps) => {
-  return (
-    <div
-      className={cn(bulletVariants({ variant, size }), className)}
-      {...props}
-    ></div>
-  );
-};
+interface BulletProps
+    extends React.ComponentProps<"div">,
+    VariantProps<typeof bulletVariants> { }
+
+function Bullet({ className, variant, size, ...props }: BulletProps) {
+    return (
+        <div
+            data-slot="bullet"
+            className={cn(bulletVariants({ variant, size }), className)}
+            {...props}
+        />
+    )
+}
+
+export { Bullet, bulletVariants }

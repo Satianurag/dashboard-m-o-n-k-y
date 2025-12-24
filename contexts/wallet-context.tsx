@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, ReactNode, useMemo, createContext, useContext, useState, useEffect } from 'react';
+import { FC, ReactNode, useMemo, useCallback, createContext, useContext, useState, useEffect } from 'react';
 import { ConnectionProvider, WalletProvider, useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { Adapter } from '@solana/wallet-adapter-base';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -23,8 +23,8 @@ const WalletStateContext = createContext<WalletContextState>({
   balance: null,
   balanceLoading: false,
   walletName: null,
-  disconnect: async () => {},
-  refreshBalance: async () => {},
+  disconnect: async () => { },
+  refreshBalance: async () => { },
 });
 
 export const useWalletState = () => useContext(WalletStateContext);
@@ -35,7 +35,7 @@ function WalletStateProvider({ children }: { children: ReactNode }) {
   const [balance, setBalance] = useState<number | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
-  const refreshBalance = async () => {
+  const refreshBalance = useCallback(async () => {
     if (!publicKey || !connection) {
       setBalance(null);
       return;
@@ -51,7 +51,7 @@ function WalletStateProvider({ children }: { children: ReactNode }) {
     } finally {
       setBalanceLoading(false);
     }
-  };
+  }, [publicKey, connection]);
 
   useEffect(() => {
     if (connected && publicKey) {
@@ -61,7 +61,7 @@ function WalletStateProvider({ children }: { children: ReactNode }) {
     } else {
       setBalance(null);
     }
-  }, [connected, publicKey, connection]);
+  }, [connected, publicKey, refreshBalance]);
 
   const value: WalletContextState = {
     connected,
@@ -87,6 +87,10 @@ interface WalletContextProviderProps {
 
 export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children }) => {
   const endpoint = useMemo(() => 'https://api.devnet.xandeum.com:8899', []);
+  // The instruction snippet included a line for useEffect here, but it refers to state/props not defined in this component.
+  // As per the instructions to make changes faithfully and without unrelated edits, and to maintain syntactical correctness,
+  // this line is omitted as it would cause errors in this context.
+  // useEffect(() => setCurrentPage(1), [filteredNodes.length, sortBy, sortOrder]);
   const wallets = useMemo(() => [], []);
 
   return (
