@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import DashboardPageLayout from "@/components/dashboard/layout";
 import TrophyIcon from "@/components/icons/trophy";
-import { usePNodes, usePerformanceHistory } from "@/hooks/use-pnode-data";
+import { usePNodes, usePerformanceHistory } from "@/hooks/use-pnode-data-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
@@ -28,11 +28,11 @@ function LoadingState() {
 }
 
 export default function PerformancePage() {
-  const { data: nodes, loading, lastUpdated } = usePNodes();
+  const { data: nodes, isLoading, dataUpdatedAt } = usePNodes();
   const { data: history } = usePerformanceHistory('24h');
   const [period, setPeriod] = useState<'24h' | '7d' | '30d'>('24h');
 
-  if (loading && !nodes) {
+  if (isLoading && !nodes) {
     return (
       <DashboardPageLayout header={{ title: "Performance", description: "Loading...", icon: TrophyIcon }}>
         <LoadingState />
@@ -62,7 +62,7 @@ export default function PerformancePage() {
     <DashboardPageLayout
       header={{
         title: "Performance",
-        description: `Rankings & metrics • ${lastUpdated?.toLocaleTimeString() || 'Loading...'}`,
+        description: `Rankings & metrics • ${dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'Loading...'}`,
         icon: TrophyIcon,
       }}
     >
@@ -108,9 +108,9 @@ export default function PerformancePage() {
                 <span className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center font-display text-lg",
                   i === 0 ? "bg-yellow-500/20 text-yellow-400" :
-                  i === 1 ? "bg-gray-400/20 text-gray-300" :
-                  i === 2 ? "bg-amber-700/20 text-amber-600" :
-                  "bg-accent text-muted-foreground"
+                    i === 1 ? "bg-gray-400/20 text-gray-300" :
+                      i === 2 ? "bg-amber-700/20 text-amber-600" :
+                        "bg-accent text-muted-foreground"
                 )}>
                   {i + 1}
                 </span>
@@ -124,8 +124,8 @@ export default function PerformancePage() {
                   <div className={cn(
                     "font-mono text-lg",
                     node.performance.tier === 'excellent' ? 'text-green-400' :
-                    node.performance.tier === 'good' ? 'text-blue-400' :
-                    'text-yellow-400'
+                      node.performance.tier === 'good' ? 'text-blue-400' :
+                        'text-yellow-400'
                   )}>
                     {node.performance.score.toFixed(1)}
                   </div>
@@ -146,8 +146,8 @@ export default function PerformancePage() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={historyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis 
-                  dataKey="time" 
+                <XAxis
+                  dataKey="time"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                 />
                 <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
@@ -160,10 +160,10 @@ export default function PerformancePage() {
                   }}
                   formatter={(value) => [`${Number(value).toFixed(0)}ms`]}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="latency" 
-                  stroke="hsl(var(--primary))" 
+                <Line
+                  type="monotone"
+                  dataKey="latency"
+                  stroke="hsl(var(--primary))"
                   strokeWidth={2}
                   dot={false}
                 />
@@ -179,7 +179,7 @@ export default function PerformancePage() {
         </div>
         <div className="h-8 rounded-full overflow-hidden flex">
           {excellentCount > 0 && (
-            <div 
+            <div
               className="bg-green-500 flex items-center justify-center text-xs font-medium text-white"
               style={{ width: `${(excellentCount / onlineNodes.length) * 100}%` }}
             >
@@ -187,7 +187,7 @@ export default function PerformancePage() {
             </div>
           )}
           {goodCount > 0 && (
-            <div 
+            <div
               className="bg-blue-500 flex items-center justify-center text-xs font-medium text-white"
               style={{ width: `${(goodCount / onlineNodes.length) * 100}%` }}
             >
@@ -195,7 +195,7 @@ export default function PerformancePage() {
             </div>
           )}
           {fairCount > 0 && (
-            <div 
+            <div
               className="bg-yellow-500 flex items-center justify-center text-xs font-medium text-black"
               style={{ width: `${(fairCount / onlineNodes.length) * 100}%` }}
             >
@@ -203,7 +203,7 @@ export default function PerformancePage() {
             </div>
           )}
           {poorCount > 0 && (
-            <div 
+            <div
               className="bg-red-500 flex items-center justify-center text-xs font-medium text-white"
               style={{ width: `${(poorCount / onlineNodes.length) * 100}%` }}
             >
@@ -228,16 +228,16 @@ export default function PerformancePage() {
             { label: '120-200ms', min: 120, max: 200, color: 'bg-yellow-500' },
             { label: '> 200ms', min: 200, max: Infinity, color: 'bg-red-500' },
           ].map(({ label, min, max, color }) => {
-            const count = onlineNodes.filter(n => 
+            const count = onlineNodes.filter(n =>
               n.metrics.responseTimeMs >= min && n.metrics.responseTimeMs < max
             ).length;
             const percentage = onlineNodes.length > 0 ? (count / onlineNodes.length) * 100 : 0;
-            
+
             return (
               <div key={label} className="flex items-center gap-3">
                 <div className="w-24 text-xs text-muted-foreground">{label}</div>
                 <div className="flex-1 h-4 bg-accent rounded overflow-hidden">
-                  <div 
+                  <div
                     className={cn('h-full rounded transition-all', color)}
                     style={{ width: `${percentage}%` }}
                   />

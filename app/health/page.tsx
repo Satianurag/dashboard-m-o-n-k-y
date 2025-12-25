@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardPageLayout from "@/components/dashboard/layout";
-import { useHealthScoreBreakdown, usePNodes, useNetworkStats, useSlashingEvents, usePeerRankings } from "@/hooks/use-pnode-data";
+import { useHealthScoreBreakdown, usePNodes, useNetworkStats, useSlashingEvents, usePeerRankings } from "@/hooks/use-pnode-data-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ResponsiveContainer,
@@ -20,8 +20,8 @@ import {
 
 const HeartPulseIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-    <path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+    <path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" />
   </svg>
 );
 
@@ -37,9 +37,9 @@ function LoadingState() {
 }
 
 export default function HealthScorePage() {
-  const { data: healthBreakdown, loading: healthLoading } = useHealthScoreBreakdown();
-  const { data: nodes, loading: nodesLoading } = usePNodes();
-  const { data: stats, loading: statsLoading } = useNetworkStats();
+  const { data: healthBreakdown, isLoading: healthLoading } = useHealthScoreBreakdown();
+  const { data: nodes, isLoading: nodesLoading } = usePNodes();
+  const { data: stats, isLoading: statsLoading } = useNetworkStats();
   const { data: slashingEvents } = useSlashingEvents();
   const { data: peerRankings } = usePeerRankings();
 
@@ -142,12 +142,12 @@ export default function HealthScorePage() {
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
                 <PolarGrid stroke="hsl(var(--border))" />
-                <PolarAngleAxis 
-                  dataKey="factor" 
+                <PolarAngleAxis
+                  dataKey="factor"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 />
-                <PolarRadiusAxis 
-                  angle={30} 
+                <PolarRadiusAxis
+                  angle={30}
                   domain={[0, 100]}
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                 />
@@ -175,9 +175,9 @@ export default function HealthScorePage() {
               <BarChart data={factorData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                 <XAxis type="number" domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
-                <YAxis 
-                  type="category" 
-                  dataKey="name" 
+                <YAxis
+                  type="category"
+                  dataKey="name"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                   width={100}
                 />
@@ -215,7 +215,7 @@ export default function HealthScorePage() {
                   <span className="text-xs text-muted-foreground">{(factor.weight * 100).toFixed(0)}% weight</span>
                 </div>
                 <div className="h-2 bg-accent rounded-full overflow-hidden mb-2">
-                  <div 
+                  <div
                     className={`h-full rounded-full ${factor.score >= 80 ? 'bg-green-500' : factor.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
                     style={{ width: `${factor.score}%` }}
                   />
@@ -264,9 +264,8 @@ export default function HealthScorePage() {
           <div className="divide-y divide-border">
             {peerRankings?.slice(0, 10).map((peer) => (
               <div key={peer.nodeId} className="px-4 py-3 flex items-center gap-4 hover:bg-accent/10">
-                <span className={`text-lg font-display w-8 ${
-                  peer.rank <= 3 ? 'text-yellow-400' : 'text-primary'
-                }`}>#{peer.rank}</span>
+                <span className={`text-lg font-display w-8 ${peer.rank <= 3 ? 'text-yellow-400' : 'text-primary'
+                  }`}>#{peer.rank}</span>
                 <div className="flex-1 min-w-0">
                   <div className="font-mono text-sm truncate">{peer.nodePubkey.slice(0, 16)}...</div>
                   <div className="text-xs text-muted-foreground">
@@ -275,9 +274,8 @@ export default function HealthScorePage() {
                 </div>
                 <div className="text-right">
                   <div className="font-display text-primary">{peer.xScore.toFixed(1)}</div>
-                  <div className={`text-xs ${
-                    peer.trend === 'up' ? 'text-green-400' : peer.trend === 'down' ? 'text-red-400' : 'text-muted-foreground'
-                  }`}>
+                  <div className={`text-xs ${peer.trend === 'up' ? 'text-green-400' : peer.trend === 'down' ? 'text-red-400' : 'text-muted-foreground'
+                    }`}>
                     {peer.trend === 'up' ? '↑' : peer.trend === 'down' ? '↓' : '→'} {Math.abs(peer.trendChange).toFixed(1)}%
                   </div>
                 </div>
@@ -303,11 +301,10 @@ export default function HealthScorePage() {
                 <div key={event.id} className="px-4 py-3 hover:bg-accent/10">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-mono text-sm truncate flex-1">{event.nodePubkey.slice(0, 16)}...</span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${
-                      event.type === 'double_sign' ? 'bg-red-500/20 text-red-400' :
+                    <span className={`text-xs px-2 py-0.5 rounded ${event.type === 'double_sign' ? 'bg-red-500/20 text-red-400' :
                       event.type === 'offline' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-orange-500/20 text-orange-400'
-                    }`}>
+                        'bg-orange-500/20 text-orange-400'
+                      }`}>
                       {event.type.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>

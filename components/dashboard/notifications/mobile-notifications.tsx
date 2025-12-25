@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Bullet } from "@/components/ui/bullet";
 import { AnimatePresence, motion, PanInfo } from "motion/react";
 import NotificationItem from "./notification-item";
-import type { Notification } from "@/types/dashboard";
 import { SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsV0 } from "@/lib/v0-context";
-
-interface MobileNotificationsProps {
-  initialNotifications: Notification[];
-}
+import { useNotifications } from "@/hooks/use-notifications";
 
 interface SwipeableWrapperProps {
   children: React.ReactNode;
@@ -49,25 +45,17 @@ function SwipeableWrapper({ children, onDelete }: SwipeableWrapperProps) {
   );
 }
 
-export default function MobileNotifications({
-  initialNotifications,
-}: MobileNotificationsProps) {
-  const [notifications, setNotifications] =
-    useState<Notification[]>(initialNotifications);
+export default function MobileNotifications() {
+  // Use real-time Supabase notifications
+  const {
+    notifications,
+    isLoading,
+    markAsRead,
+    deleteNotification
+  } = useNotifications();
 
   const isV0 = useIsV0();
-
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
-    );
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
-  };
 
   return (
     <div className="h-full flex flex-col">

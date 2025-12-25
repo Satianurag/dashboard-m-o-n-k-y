@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardPageLayout from "@/components/dashboard/layout";
-import { useDecentralizationMetrics, usePNodes, useSuperminorityInfo, useCensorshipResistanceScore } from "@/hooks/use-pnode-data";
+import { useDecentralizationMetrics, usePNodes, useSuperminorityInfo, useCensorshipResistanceScore } from "@/hooks/use-pnode-data-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ResponsiveContainer,
@@ -18,12 +18,12 @@ import {
 
 const NetworkIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="5" r="3"/>
-    <line x1="12" y1="8" x2="12" y2="12"/>
-    <circle cx="6" cy="19" r="3"/>
-    <circle cx="18" cy="19" r="3"/>
-    <line x1="12" y1="12" x2="6" y2="16"/>
-    <line x1="12" y1="12" x2="18" y2="16"/>
+    <circle cx="12" cy="5" r="3" />
+    <line x1="12" y1="8" x2="12" y2="12" />
+    <circle cx="6" cy="19" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="12" y1="12" x2="6" y2="16" />
+    <line x1="12" y1="12" x2="18" y2="16" />
   </svg>
 );
 
@@ -44,8 +44,8 @@ function LoadingState() {
 const COLORS = ['#00ff88', '#22c55e', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
 
 export default function DecentralizationPage() {
-  const { data: metrics, loading: metricsLoading } = useDecentralizationMetrics();
-  const { data: nodes, loading: nodesLoading } = usePNodes();
+  const { data: metrics, isLoading: metricsLoading } = useDecentralizationMetrics();
+  const { data: nodes, isLoading: nodesLoading } = usePNodes();
   const { data: superminority } = useSuperminorityInfo();
   const { data: censorshipScore } = useCensorshipResistanceScore();
 
@@ -171,9 +171,9 @@ export default function DecentralizationPage() {
               <BarChart data={asnData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                 <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
-                <YAxis 
-                  type="category" 
-                  dataKey="name" 
+                <YAxis
+                  type="category"
+                  dataKey="name"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                   width={80}
                 />
@@ -205,7 +205,7 @@ export default function DecentralizationPage() {
               <div key={dc.name} className="flex items-center gap-3">
                 <div className="w-32 text-xs text-muted-foreground truncate" title={dc.name}>{dc.name}</div>
                 <div className="flex-1 h-4 bg-accent rounded overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full rounded transition-all ${dc.percentage > 20 ? 'bg-red-500' : dc.percentage > 10 ? 'bg-yellow-500' : 'bg-green-500'}`}
                     style={{ width: `${Math.min(dc.percentage * 2, 100)}%` }}
                   />
@@ -304,11 +304,10 @@ export default function DecentralizationPage() {
                 <div className="text-3xl font-display text-primary">{superminority?.count || 0}</div>
                 <div className="text-xs text-muted-foreground">Validators in superminority</div>
               </div>
-              <div className={`px-3 py-1 rounded text-sm ${
-                superminority?.riskLevel === 'low' ? 'bg-green-500/20 text-green-400' :
+              <div className={`px-3 py-1 rounded text-sm ${superminority?.riskLevel === 'low' ? 'bg-green-500/20 text-green-400' :
                 superminority?.riskLevel === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                'bg-red-500/20 text-red-400'
-              }`}>
+                  'bg-red-500/20 text-red-400'
+                }`}>
                 {superminority?.riskLevel?.toUpperCase()} RISK
               </div>
             </div>
@@ -339,12 +338,11 @@ export default function DecentralizationPage() {
                 <div className="text-3xl font-display text-primary">{censorshipScore?.overall.toFixed(0) || 0}</div>
                 <div className="text-xs text-muted-foreground">Overall score</div>
               </div>
-              <div className={`text-4xl font-display ${
-                censorshipScore?.grade === 'A' ? 'text-green-400' :
+              <div className={`text-4xl font-display ${censorshipScore?.grade === 'A' ? 'text-green-400' :
                 censorshipScore?.grade === 'B' ? 'text-blue-400' :
-                censorshipScore?.grade === 'C' ? 'text-yellow-400' :
-                'text-red-400'
-              }`}>
+                  censorshipScore?.grade === 'C' ? 'text-yellow-400' :
+                    'text-red-400'
+                }`}>
                 {censorshipScore?.grade}
               </div>
             </div>
@@ -356,10 +354,9 @@ export default function DecentralizationPage() {
                     <span className="font-mono">{value.toFixed(0)}/100</span>
                   </div>
                   <div className="h-2 bg-accent rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${
-                        value >= 70 ? 'bg-green-500' : value >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}
+                    <div
+                      className={`h-full rounded-full ${value >= 70 ? 'bg-green-500' : value >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
                       style={{ width: `${value}%` }}
                     />
                   </div>

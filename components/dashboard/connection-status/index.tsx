@@ -1,6 +1,6 @@
 'use client';
 
-import { useConnectionStatus } from '@/hooks/use-pnode-data';
+import { useConnectionStatus } from '@/hooks/use-pnode-data-query';
 import { cn } from '@/lib/utils';
 
 export function ConnectionStatus() {
@@ -24,7 +24,7 @@ export function ConnectionStatus() {
     },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[status as keyof typeof statusConfig];
 
   return (
     <div className="flex items-center gap-2 text-xs">

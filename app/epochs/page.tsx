@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardPageLayout from "@/components/dashboard/layout";
-import { useEpochInfo, useEpochHistory } from "@/hooks/use-pnode-data";
+import { useEpochInfo, useEpochHistory } from "@/hooks/use-pnode-data-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ResponsiveContainer,
@@ -15,8 +15,8 @@ import {
 
 const ClockIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10"/>
-    <polyline points="12 6 12 12 16 14"/>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
   </svg>
 );
 
@@ -32,8 +32,8 @@ function LoadingState() {
 }
 
 export default function EpochsPage() {
-  const { data: epochInfo, loading: epochLoading } = useEpochInfo();
-  const { data: epochHistory, loading: historyLoading } = useEpochHistory();
+  const { data: epochInfo, isLoading: epochLoading } = useEpochInfo();
+  const { data: epochHistory, isLoading: historyLoading } = useEpochHistory();
 
   const isLoading = epochLoading || historyLoading;
 
@@ -76,8 +76,8 @@ export default function EpochsPage() {
           <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Progress</div>
           <div className="text-3xl font-display">{epochInfo?.epochProgress.toFixed(1)}%</div>
           <div className="mt-2 h-1.5 bg-accent rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary rounded-full transition-all" 
+            <div
+              className="h-full bg-primary rounded-full transition-all"
               style={{ width: `${epochInfo?.epochProgress || 0}%` }}
             />
           </div>
@@ -108,13 +108,13 @@ export default function EpochsPage() {
               <AreaChart data={historyData}>
                 <defs>
                   <linearGradient id="blocksGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis 
-                  dataKey="epoch" 
+                <XAxis
+                  dataKey="epoch"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 />
                 <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
@@ -127,10 +127,10 @@ export default function EpochsPage() {
                   }}
                   formatter={(value) => [`${Number(value).toFixed(0)}K blocks`]}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="blocks" 
-                  stroke="hsl(var(--primary))" 
+                <Area
+                  type="monotone"
+                  dataKey="blocks"
+                  stroke="hsl(var(--primary))"
                   fill="url(#blocksGradient)"
                   strokeWidth={2}
                 />

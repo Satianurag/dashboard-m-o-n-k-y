@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import TVNoise from "@/components/ui/tv-noise";
 import Image from "next/image";
-import { useLiveClock, useNetworkStats } from "@/hooks/use-pnode-data";
+import { useLiveClock, useNetworkStats } from "@/hooks/use-pnode-data-query";
 
 export default function Widget() {
   const { time, timezone } = useLiveClock();
@@ -33,7 +33,7 @@ export default function Widget() {
 
   const dateInfo = formatDate(time);
 
-  const networkStatus = stats 
+  const networkStatus = stats
     ? `${stats.onlineNodes}/${stats.totalNodes} nodes`
     : 'Connecting...';
 

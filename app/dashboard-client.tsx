@@ -6,7 +6,7 @@ import BracketsIcon from "@/components/icons/brackets";
 import GearIcon from "@/components/icons/gear";
 import ProcessorIcon from "@/components/icons/proccesor";
 import BoomIcon from "@/components/icons/boom";
-import { usePNodes, useNetworkStats, usePerformanceHistory, useGossipEvents, useXScore } from "@/hooks/use-pnode-data";
+import { usePNodes, useNetworkStats, usePerformanceHistory, useGossipEvents, useXScore } from "@/hooks/use-pnode-data-query";
 import DashboardStat from "@/components/dashboard/stat";
 import { NetworkChart } from "@/components/dashboard/network-chart";
 import { InfoTooltip } from "@/components/dashboard/info-tooltip";
@@ -35,17 +35,17 @@ export default function DashboardOverview({
   initialNodes: any[] | null;
   initialStats: any | null;
 }) {
-  const { data: nodes, loading: nodesLoading, lastUpdated: nodesUpdated } = usePNodes(initialNodes);
-  const { data: stats, loading: statsLoading } = useNetworkStats(initialStats);
-  const { data: history, loading: historyLoading } = usePerformanceHistory();
+  const { data: nodes, isLoading: nodesLoading, dataUpdatedAt } = usePNodes(initialNodes);
+  const { data: stats, isLoading: statsLoading } = useNetworkStats(initialStats);
+  const { data: history, isLoading: historyLoading } = usePerformanceHistory();
   const { data: gossipEvents } = useGossipEvents();
   const { data: xScore } = useXScore();
 
 
   const isLoading = nodesLoading || statsLoading || historyLoading;
 
-  const lastUpdatedText = nodesUpdated
-    ? `Last updated ${nodesUpdated.toLocaleTimeString()}`
+  const lastUpdatedText = dataUpdatedAt
+    ? `Last updated ${new Date(dataUpdatedAt).toLocaleTimeString()}`
     : 'Connecting...';
 
   if (isLoading && !nodes) {
@@ -83,7 +83,7 @@ export default function DashboardOverview({
         <DashboardStat
           label="NETWORK HEALTH"
           value={`${stats?.networkHealth?.toFixed(1) || "0"}%`}
-          description={stats?.degradedNodes > 0 ? `${stats?.degradedNodes} DEGRADED` : "ALL SYSTEMS NORMAL"}
+          description={stats?.degradedNodes && stats.degradedNodes > 0 ? `${stats.degradedNodes} DEGRADED` : "ALL SYSTEMS NORMAL"}
           icon={ProcessorIcon}
           intent="negative"
           direction="down"
@@ -93,8 +93,8 @@ export default function DashboardOverview({
           value={`${stats?.averageResponseTime?.toFixed(0) || "0"}ms`}
           description={`${stats?.averageUptime?.toFixed(1) || "0"}% AVG UPTIME`}
           icon={BoomIcon}
-          intent={stats?.averageResponseTime < 100 ? "positive" : "neutral"}
-          tag={stats?.averageResponseTime < 100 ? "FAST" : undefined}
+          intent={stats?.averageResponseTime && stats.averageResponseTime < 100 ? "positive" : "neutral"}
+          tag={stats?.averageResponseTime && stats.averageResponseTime < 100 ? "FAST" : undefined}
         />
       </div>
 

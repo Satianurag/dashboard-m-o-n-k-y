@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useGossipEvents } from '@/hooks/use-pnode-data';
+import { useGossipEvents } from '@/hooks/use-pnode-data-query';
 import type { GossipEvent } from '@/types/pnode';
 import { cn } from '@/lib/utils';
 
@@ -28,7 +28,7 @@ interface PulseEventProps {
 function PulseEvent({ event }: PulseEventProps) {
   const sourceId = event.sourceNodeId.replace('pnode_', '');
   const targetId = event.targetNodeId.replace('pnode_', '');
-  
+
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-3">
       <span className={cn('text-xs font-mono', eventTypeColors[event.type])}>
@@ -67,7 +67,7 @@ export function LiveNetworkPulse() {
   }, [events]);
 
   return (
-    <div 
+    <div
       className="fixed bottom-0 left-0 right-0 h-8 bg-background/95 border-t border-border backdrop-blur-sm z-50"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -79,12 +79,12 @@ export function LiveNetworkPulse() {
             LIVE PULSE
           </span>
         </div>
-        
-        <div 
+
+        <div
           ref={containerRef}
           className="flex-1 overflow-hidden relative"
         >
-          <div 
+          <div
             className={cn(
               "flex items-center h-full",
               !isPaused && "animate-marquee"

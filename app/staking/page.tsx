@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardPageLayout from "@/components/dashboard/layout";
-import { useStakingStats, usePNodes } from "@/hooks/use-pnode-data";
+import { useStakingStats, usePNodes } from "@/hooks/use-pnode-data-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ResponsiveContainer,
@@ -15,8 +15,8 @@ import {
 
 const CoinsIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="8" cy="8" r="6"/>
-    <path d="M18.09 10.37A6 6 0 1 1 10.34 18"/>
+    <circle cx="8" cy="8" r="6" />
+    <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
   </svg>
 );
 
@@ -32,8 +32,8 @@ function LoadingState() {
 }
 
 export default function StakingPage() {
-  const { data: stakingStats, loading: stakingLoading } = useStakingStats();
-  const { data: nodes, loading: nodesLoading } = usePNodes();
+  const { data: stakingStats, isLoading: stakingLoading } = useStakingStats();
+  const { data: nodes, isLoading: nodesLoading } = usePNodes();
 
   const isLoading = stakingLoading || nodesLoading;
 
@@ -132,8 +132,8 @@ export default function StakingPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={commissionData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis 
-                  dataKey="range" 
+                <XAxis
+                  dataKey="range"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 />
                 <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
@@ -205,7 +205,7 @@ export default function StakingPage() {
             }).length || 0;
             const total = nodes?.length || 1;
             const percentage = (count / total) * 100;
-            
+
             return (
               <div key={label} className="flex items-center gap-3">
                 <div className="w-24 text-xs text-muted-foreground">{label}</div>

@@ -4,7 +4,7 @@ import { use, useMemo } from 'react';
 import Link from 'next/link';
 import DashboardPageLayout from "@/components/dashboard/layout";
 import ServerIcon from "@/components/icons/server";
-import { usePNodes, useCommissionHistory } from "@/hooks/use-pnode-data";
+import { usePNodes, useCommissionHistory } from "@/hooks/use-pnode-data-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ExportButton } from "@/components/dashboard/export-button";
@@ -125,7 +125,7 @@ function StatCard({
 
 export default function NodeDetailPage({ params }: PageProps) {
     const { pubkey } = use(params);
-    const { data: nodes, loading } = usePNodes();
+    const { data: nodes, isLoading } = usePNodes();
 
     const node = useMemo(() => {
         if (!nodes) return null;
@@ -170,7 +170,7 @@ export default function NodeDetailPage({ params }: PageProps) {
         }));
     }, [node]);
 
-    if (loading && !nodes) {
+    if (isLoading && !nodes) {
         return (
             <DashboardPageLayout
                 header={{

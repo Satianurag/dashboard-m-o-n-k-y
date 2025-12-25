@@ -6,38 +6,39 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bullet } from "@/components/ui/bullet";
 import NotificationItem from "./notification-item";
-import type { Notification } from "@/types/dashboard";
 import { AnimatePresence, motion } from "framer-motion";
+import { useNotifications } from "@/hooks/use-notifications";
 
-interface NotificationsProps {
-  initialNotifications: Notification[];
-}
-
-export default function Notifications({
-  initialNotifications,
-}: NotificationsProps) {
-  const [notifications, setNotifications] =
-    useState<Notification[]>(initialNotifications);
+export default function Notifications() {
   const [showAll, setShowAll] = useState(false);
+
+  // Use real-time Supabase notifications
+  const {
+    notifications,
+    isLoading,
+    markAsRead,
+    deleteNotification
+  } = useNotifications();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const displayedNotifications = showAll
     ? notifications
     : notifications.slice(0, 3);
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
-    );
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
-  };
-
   const clearAll = () => {
-    setNotifications([]);
+    // Delete all notifications
+    notifications.forEach(n => deleteNotification(n.id));
   };
+
+  if (isLoading) {
+    return (
+      <Card className="h-full">
+        <CardContent className="p-8 text-center">
+          <p className="text-sm text-muted-foreground">Loading notifications...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="h-full">

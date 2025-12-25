@@ -8,20 +8,6 @@
     "theme_color": "#8b5cf6",
     "orientation": "any",
     "scope": "/",
-    "icons": [
-        {
-            "src": "/icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
-        }
-    ],
     "categories": [
         "finance",
         "utilities"
@@ -33,44 +19,6 @@
             "type": "image/png",
             "form_factor": "wide",
             "label": "Xandeum pNode Analytics Dashboard"
-        }
-    ],
-    "shortcuts": [
-        {
-            "name": "View pNodes",
-            "short_name": "pNodes",
-            "description": "Browse all network nodes",
-            "url": "/pnodes",
-            "icons": [
-                {
-                    "src": "/icon-192.png",
-                    "sizes": "192x192"
-                }
-            ]
-        },
-        {
-            "name": "Analytics",
-            "short_name": "Analytics",
-            "description": "View network analytics",
-            "url": "/analytics",
-            "icons": [
-                {
-                    "src": "/icon-192.png",
-                    "sizes": "192x192"
-                }
-            ]
-        },
-        {
-            "name": "Staking",
-            "short_name": "Staking",
-            "description": "View staking information",
-            "url": "/staking",
-            "icons": [
-                {
-                    "src": "/icon-192.png",
-                    "sizes": "192x192"
-                }
-            ]
         }
     ],
     "related_applications": [],

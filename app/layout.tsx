@@ -11,6 +11,7 @@ import Notifications from "@/components/dashboard/notifications";
 import { MobileChat } from "@/components/chat/mobile-chat";
 import Chat from "@/components/chat";
 import { WalletContextProvider } from "@/contexts/wallet-context";
+import { QueryProvider } from "@/lib/query-provider";
 // LiveNetworkPulse moved to app/page.tsx for performance
 import type { MockData } from "@/types/dashboard";
 
@@ -62,37 +63,39 @@ export default function RootLayout({
         className={`${rebelGrotesk.variable} ${robotoMono.variable} antialiased`}
       >
         <V0Provider isV0={isV0}>
-          <WalletContextProvider>
-            <SidebarProvider>
-              {/* Accessibility: Skip to main content link */}
-              <a href="#main-content" className="skip-link">
-                Skip to main content
-              </a>
+          <QueryProvider>
+            <WalletContextProvider>
+              <SidebarProvider>
+                {/* Accessibility: Skip to main content link */}
+                <a href="#main-content" className="skip-link">
+                  Skip to main content
+                </a>
 
-              {/* Mobile Header - only visible on mobile */}
-              <MobileHeader mockData={mockData} />
+                {/* Mobile Header - only visible on mobile */}
+                <MobileHeader />
 
-              {/* Desktop Layout */}
-              <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-gap lg:px-sides pb-8">
-                <div className="hidden lg:block col-span-2 top-0 relative">
-                  <DashboardSidebar />
-                </div>
-                <main id="main-content" className="col-span-1 lg:col-span-7">{children}</main>
-                <div className="col-span-3 hidden lg:block">
-                  <div className="fixed right-[var(--sides)] top-0 w-[calc((100vw-var(--sides)*2-var(--gap)*2)/12*3)] space-y-gap py-sides h-screen overflow-clip">
-                    <Widget />
-                    <Notifications initialNotifications={mockData.notifications} />
-                    <Chat />
+                {/* Desktop Layout */}
+                <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-gap lg:px-sides pb-8">
+                  <div className="hidden lg:block col-span-2 top-0 relative">
+                    <DashboardSidebar />
+                  </div>
+                  <main id="main-content" className="col-span-1 lg:col-span-7">{children}</main>
+                  <div className="col-span-3 hidden lg:block">
+                    <div className="fixed right-[var(--sides)] top-0 w-[calc((100vw-var(--sides)*2-var(--gap)*2)/12*3)] space-y-gap py-sides h-screen overflow-clip">
+                      <Widget />
+                      <Notifications />
+                      <Chat />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* LiveNetworkPulse moved to dashboard page for performance */}
+                {/* LiveNetworkPulse moved to dashboard page for performance */}
 
-              {/* Mobile Chat - floating CTA with drawer */}
-              <MobileChat />
-            </SidebarProvider>
-          </WalletContextProvider>
+                {/* Mobile Chat - floating CTA with drawer */}
+                <MobileChat />
+              </SidebarProvider>
+            </WalletContextProvider>
+          </QueryProvider>
         </V0Provider>
       </body>
     </html>

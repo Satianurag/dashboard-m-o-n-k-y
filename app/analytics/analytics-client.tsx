@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import DashboardPageLayout from "@/components/dashboard/layout";
 import ChartIcon from "@/components/icons/chart";
-import { usePNodes, useNetworkStats, usePerformanceHistory, useTrendData } from "@/hooks/use-pnode-data";
+import { usePNodes, useNetworkStats, usePerformanceHistory, useTrendData } from "@/hooks/use-pnode-data-query";
 import { NetworkChart } from "@/components/dashboard/network-chart";
 import { ExportButton } from "@/components/dashboard/export-button";
 import { InfoTooltip } from "@/components/dashboard/info-tooltip";
@@ -40,9 +40,9 @@ export default function AnalyticsPage({
   initialHistory: any[] | null;
 }) {
   const [period, setPeriod] = useState<'24h' | '7d' | '30d'>('24h');
-  const { data: nodes, loading: nodesLoading, lastUpdated } = usePNodes(initialNodes);
-  const { data: stats, loading: statsLoading } = useNetworkStats(initialStats);
-  const { data: history, loading: historyLoading } = usePerformanceHistory(period, initialHistory);
+  const { data: nodes, isLoading: nodesLoading, dataUpdatedAt } = usePNodes(initialNodes);
+  const { data: stats, isLoading: statsLoading } = useNetworkStats(initialStats);
+  const { data: history, isLoading: historyLoading } = usePerformanceHistory(period, initialHistory);
 
 
   const isLoading = nodesLoading || statsLoading || historyLoading;
@@ -72,7 +72,7 @@ export default function AnalyticsPage({
     <DashboardPageLayout
       header={{
         title: "Analytics",
-        description: `Trends & projections • ${lastUpdated?.toLocaleTimeString() || 'Loading...'}`,
+        description: `Trends & projections • ${dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'Loading...'}`,
         icon: ChartIcon,
       }}
     >

@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -5,15 +7,12 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import MonkeyIcon from "@/components/icons/monkey";
 import MobileNotifications from "@/components/dashboard/notifications/mobile-notifications";
-import type { MockData } from "@/types/dashboard";
 import BellIcon from "@/components/icons/bell";
+import { useNotifications } from "@/hooks/use-notifications";
 
-interface MobileHeaderProps {
-  mockData: MockData;
-}
-
-export function MobileHeader({ mockData }: MobileHeaderProps) {
-  const unreadCount = mockData.notifications.filter((n) => !n.read).length;
+export function MobileHeader() {
+  const { notifications } = useNotifications();
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="lg:hidden h-header-mobile sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -54,9 +53,7 @@ export function MobileHeader({ mockData }: MobileHeaderProps) {
             side="right"
             className="w-[80%] max-w-md p-0"
           >
-            <MobileNotifications
-              initialNotifications={mockData.notifications}
-            />
+            <MobileNotifications />
           </SheetContent>
         </Sheet>
       </div>

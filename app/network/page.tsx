@@ -2,7 +2,7 @@
 
 import DashboardPageLayout from "@/components/dashboard/layout";
 import GlobeIcon from "@/components/icons/globe";
-import { usePNodes, useGossipHealth, useStorageDistribution } from "@/hooks/use-pnode-data";
+import { usePNodes, useGossipHealth, useStorageDistribution } from "@/hooks/use-pnode-data-query";
 import { LeafletMap } from "@/components/dashboard/leaflet-map";
 import { GossipHealthPanel, StorageDistributionPanel } from "@/components/dashboard/gossip-health";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,9 +20,9 @@ function LoadingState() {
 }
 
 export default function NetworkPage() {
-  const { data: nodes, loading: nodesLoading, lastUpdated } = usePNodes();
-  const { data: gossipHealth, loading: gossipLoading } = useGossipHealth();
-  const { data: distribution, loading: distLoading } = useStorageDistribution();
+  const { data: nodes, isLoading: nodesLoading, dataUpdatedAt } = usePNodes();
+  const { data: gossipHealth, isLoading: gossipLoading } = useGossipHealth();
+  const { data: distribution, isLoading: distLoading } = useStorageDistribution();
 
   const isLoading = nodesLoading || gossipLoading || distLoading;
 
@@ -44,7 +44,7 @@ export default function NetworkPage() {
     <DashboardPageLayout
       header={{
         title: "Topology",
-        description: `Gossip network • ${lastUpdated?.toLocaleTimeString() || 'Connecting...'}`,
+        description: `Gossip network • ${dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : 'Connecting...'}`,
         icon: GlobeIcon,
       }}
     >
@@ -77,7 +77,7 @@ export default function NetworkPage() {
             Network Topology - Gossip Protocol
           </span>
           <div className="flex items-center gap-2 text-xs">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-muted-foreground">Herrenberg Protocol Active</span>
           </div>
         </div>
@@ -102,11 +102,11 @@ export default function NetworkPage() {
             { label: '15-30 peers', min: 15, max: 30, color: 'bg-yellow-500' },
             { label: '< 15 peers', min: 0, max: 15, color: 'bg-red-500' },
           ].map(({ label, min, max, color }) => {
-            const count = onlineNodes.filter(n => 
+            const count = onlineNodes.filter(n =>
               n.gossip.peersConnected >= min && n.gossip.peersConnected < max
             ).length;
             const percentage = onlineNodes.length > 0 ? (count / onlineNodes.length) * 100 : 0;
-            
+
             return (
               <div key={label} className="flex items-center gap-3">
                 <div className="w-24 text-xs text-muted-foreground">{label}</div>

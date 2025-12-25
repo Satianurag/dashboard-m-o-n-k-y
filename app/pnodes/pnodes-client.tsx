@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import DashboardPageLayout from "@/components/dashboard/layout";
 import ServerIcon from "@/components/icons/server";
-import { usePNodes } from "@/hooks/use-pnode-data";
+import { usePNodes } from "@/hooks/use-pnode-data-query";
 import { NodeSearch } from "@/components/dashboard/node-search";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -118,7 +118,7 @@ function NodeCard({ node, isSelected, onToggle }: { node: PNode; isSelected: boo
 }
 
 export default function PNodesPage({ initialNodes }: { initialNodes: PNode[] | null }) {
-  const { data: nodes, loading, lastUpdated } = usePNodes(initialNodes);
+  const { data: nodes, isLoading, dataUpdatedAt } = usePNodes(initialNodes);
 
   const [filteredNodes, setFilteredNodes] = useState<PNode[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
@@ -162,7 +162,7 @@ export default function PNodesPage({ initialNodes }: { initialNodes: PNode[] | n
     );
   };
 
-  if (loading && !nodes) {
+  if (isLoading && !nodes) {
     return (
       <DashboardPageLayout header={{ title: "pNodes", description: "Loading...", icon: ServerIcon }}>
         <LoadingState />
