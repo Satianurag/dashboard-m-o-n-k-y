@@ -14,9 +14,7 @@ import { WalletContextProvider } from "@/contexts/wallet-context";
 import { QueryProvider } from "@/lib/query-provider";
 import { NetworkMarquee } from "@/components/dashboard/network-marquee";
 // LiveNetworkPulse moved to app/page.tsx for performance
-import type { MockData } from "@/types/dashboard";
-
-import { layoutMockData as mockData } from "@/server/api/mock-data";
+// LiveNetworkPulse moved to app/page.tsx for performance
 
 const robotoMono = Roboto_Mono({
   variable: "--font-roboto-mono",

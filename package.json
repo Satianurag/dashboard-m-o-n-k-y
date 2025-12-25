@@ -70,6 +70,7 @@
     "tailwindcss-animate": "^1.0.7",
     "use-sync-external-store": "latest",
     "vaul": "^1.1.2",
+    "xandeum-prpc": "^0.1.6",
     "zod": "4.2.1",
     "zustand": "latest"
   },

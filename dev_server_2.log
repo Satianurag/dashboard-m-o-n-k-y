@@ -1,0 +1,79 @@
+
+> xandeum-pnode-analytics@0.1.0 dev
+> next dev -H 0.0.0.0 -p 5000 --webpack
+
+▲ Next.js 16.1.0 (webpack)
+- Local:         http://localhost:5000
+- Network:       http://0.0.0.0:5000
+- Environments: .env.local
+
+✓ Starting...
+✓ Ready in 3.6s
+○ Compiling /pnodes ...
+Cache Stale! Triggering background update...
+Fetching FRESH pNode data via xandeum-prpc...
+Error updating Supabase cache: {
+  code: '21000',
+  details: null,
+  hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
+  message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+}
+ GET /pnodes 200 in 19.9s (compile: 13.8s, render: 6.1s)
+Cache Stale! Triggering background update...
+Fetching FRESH pNode data via xandeum-prpc...
+Cache Stale! Triggering background update...
+Fetching FRESH pNode data via xandeum-prpc...
+Cache Stale! Triggering background update...
+Fetching FRESH pNode data via xandeum-prpc...
+Error updating Supabase cache: {
+  code: '21000',
+  details: null,
+  hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
+  message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+}
+ GET /pnodes 200 in 3.4s (compile: 69ms, render: 3.4s)
+Error updating Supabase cache: {
+  code: '21000',
+  details: null,
+  hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
+  message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+}
+ GET /api/pnodes 200 in 6.5s (compile: 2.6s, render: 4.0s)
+Error updating Supabase cache: {
+  code: '21000',
+  details: null,
+  hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
+  message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+}
+ GET /api/pnode-data?type=network-stats 200 in 6.8s (compile: 2.6s, render: 4.2s)
+Cache Stale! Triggering background update...
+Fetching FRESH pNode data via xandeum-prpc...
+Error updating Supabase cache: {
+  code: '21000',
+  details: null,
+  hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
+  message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+}
+ GET /pnodes 200 in 7.6s (compile: 6ms, render: 7.6s)
+Cache Stale! Triggering background update...
+Fetching FRESH pNode data via xandeum-prpc...
+Cache Stale! Triggering background update...
+Fetching FRESH pNode data via xandeum-prpc...
+Error updating Supabase cache: {
+  code: '21000',
+  details: null,
+  hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
+  message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+}
+ GET /api/pnode-data?type=network-stats 200 in 6.3s (compile: 11ms, render: 6.3s)
+Error updating Supabase cache: {
+  code: '21000',
+  details: null,
+  hint: 'Ensure that no rows proposed for insertion within the same command have duplicate constrained values.',
+  message: 'ON CONFLICT DO UPDATE command cannot affect row a second time'
+}
+ GET /api/pnodes 200 in 6.5s (compile: 24ms, render: 6.5s)
+Cache Stale! Triggering background update...
+Fetching FRESH pNode data via xandeum-prpc...
+Supabase cache updated successfully with 215 nodes.
+ GET /pnodes 200 in 4.6s (compile: 166ms, render: 4.4s)

@@ -46,7 +46,7 @@ function SwipeableWrapper({ children, onDelete }: SwipeableWrapperProps) {
 }
 
 export default function MobileNotifications() {
-  // Use real-time Supabase notifications
+  // Use local notifications
   const {
     notifications,
     isLoading,

@@ -1,7 +1,6 @@
 import Image from "next/image";
 import type { ChatConversation } from "@/types/chat";
 import { formatDate } from "./utils";
-import { mockChatData } from "@/data/chat-mock";
 import { cn } from "@/lib/utils";
 
 interface ChatPreviewProps {
@@ -13,8 +12,9 @@ export default function ChatPreview({
   conversation,
   onOpenConversation,
 }: ChatPreviewProps) {
+  const currentUserId = "joyboy"; // Hardcoded default
   const user = conversation.participants.find(
-    (p) => p.id !== mockChatData.currentUser.id
+    (p) => p.id !== currentUserId
   );
 
   if (!user) return null;
@@ -46,17 +46,20 @@ export default function ChatPreview({
             <p className="text-xs text-foreground/50">{user.username}</p>
           </div>
           <span className="text-xs text-foreground/40">
-            {formatDate(conversation.lastMessage.timestamp)}
+            {conversation.lastMessage ? formatDate(conversation.lastMessage.timestamp) : ''}
           </span>
         </div>
-        <p
-          className={cn(
-            "text-sm text-foreground/70 truncate mt-1",
-            conversation.unreadCount > 0 && "font-bold text-foreground"
-          )}
-        >
-          {conversation.lastMessage.content}
-        </p>
+
+        <div className="flex items-center justify-between mt-1">
+          <p
+            className={cn(
+              "text-xs truncate pr-4",
+              conversation.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+            )}
+          >
+            {conversation.lastMessage?.content || 'No messages yet'}
+          </p>
+        </div>
       </div>
     </div>
   );

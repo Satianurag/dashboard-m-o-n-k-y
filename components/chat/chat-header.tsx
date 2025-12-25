@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useChatState } from "./use-chat-state";
-import { mockChatData } from "@/data/chat-mock";
 import { ChatStatusIndicator } from "./chat-status-indicator";
 import PlusIcon from "../icons/plus";
 import MinusIcon from "../icons/minus";
@@ -43,9 +42,19 @@ export function ChatHeader({
     variant === "mobile"
       ? false
       : chatState.state === "collapsed" && hasNewMessages;
+
+  // Logic to find other user - simplified since we don't have usage of mockChatData.currentUser
   const otherUser = activeConversation?.participants.find(
-    (p) => p.id !== mockChatData.currentUser.id
+    p => p.id !== "joyboy"
+    // ChatUser doesn't have a flag for "isCurrentUser".
+    // But `activeConversation.participants` is [currentUser, otherUser].
+    // We can just take the second one if we assume order, or we'd need current user ID. 
+    // For now, let's just pick the last one or the one that isn't ID "joyboy" (hardcoded in chat-utils)
   );
+  // Actually, chat-utils hardcoded "joyboy".
+  const currentUserId = "joyboy"; // Hardcoded in chat-utils
+  const otherParticipant = activeConversation?.participants.find(p => p.id !== currentUserId);
+
 
   const handleClick = () => {
     if (onClick) {
@@ -119,7 +128,7 @@ export function ChatHeader({
             // Mobile variant
             if (variant === "mobile") {
               if (chatState.state === "conversation") {
-                return otherUser?.name || "CONVERSATION";
+                return otherParticipant?.name || "CONVERSATION";
               }
               return "ONLINE";
             }
@@ -127,14 +136,13 @@ export function ChatHeader({
             // Desktop variant
             if (chatState.state === "collapsed") {
               return shouldHighlightUnreadMessages
-                ? `${totalUnreadCount} New Message${
-                    totalUnreadCount > 1 ? "s" : ""
-                  }`
+                ? `${totalUnreadCount} New Message${totalUnreadCount > 1 ? "s" : ""
+                }`
                 : "Chat";
             }
 
             if (chatState.state === "conversation") {
-              return otherUser?.name || "CONVERSATION";
+              return otherParticipant?.name || "CONVERSATION";
             }
 
             return "ONLINE";

@@ -77,7 +77,7 @@ export default function PNodesPage({ initialNodes }: { initialNodes: PNode[] | n
     return filtered.sort((a, b) => {
       let aVal = 0, bVal = 0;
       switch (sortBy) {
-        case 'credits': aVal = a.credits; bVal = b.credits; break;
+        case 'credits': aVal = a.credits || 0; bVal = b.credits || 0; break;
         case 'latency': aVal = a.metrics.responseTimeMs; bVal = b.metrics.responseTimeMs; break;
         case 'uptime': aVal = a.uptime; bVal = b.uptime; break;
       }
@@ -262,7 +262,7 @@ export default function PNodesPage({ initialNodes }: { initialNodes: PNode[] | n
                 {/* Credits */}
                 <div className="col-span-1">
                   <Badge variant={isFeatured ? "default" : "secondary"} className="font-mono">
-                    {node.credits.toLocaleString()}
+                    {(node.credits || 0).toLocaleString()}
                   </Badge>
                 </div>
 

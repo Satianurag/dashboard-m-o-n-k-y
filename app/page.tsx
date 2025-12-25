@@ -1,5 +1,6 @@
 
-import { getClusterNodes, getNetworkStats } from "@/lib/pnode-api";
+import { getClusterNodes } from "@/server/api/pnodes";
+import { getNetworkStats } from "@/server/api/network";
 import DashboardOverview from "./dashboard-client";
 
 // ISR: Revalidate every 60 seconds

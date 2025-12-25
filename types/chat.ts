@@ -17,7 +17,7 @@ export interface ChatMessage {
 export interface ChatConversation {
   id: string;
   participants: ChatUser[];
-  lastMessage: ChatMessage;
+  lastMessage?: ChatMessage;
   unreadCount: number;
   messages: ChatMessage[];
 }

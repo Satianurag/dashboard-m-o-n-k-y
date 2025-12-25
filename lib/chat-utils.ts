@@ -1,5 +1,5 @@
 import type { ChatConversation, ChatMessage, ChatUser } from "@/types/chat";
-import { supabase } from "@/lib/supabase";
+
 
 export const getCurrentUser = (): ChatUser => ({
     id: "joyboy",
@@ -17,7 +17,31 @@ export const mapProfileToChatUser = (profile: any): ChatUser => ({
     isOnline: profile.is_online
 });
 
-export const mapSupabaseMessageToChatMessage = (msg: any, currentUserId: string): ChatMessage => ({
+
+import { supabase } from '@/lib/supabase';
+
+const MOCK_CONVERSATIONS: ChatConversation[] = [
+    {
+        id: 'global-room',
+        participants: [
+            { id: 'system', name: 'Xandeum Network', username: '@network', avatar: '/avatars/xandeum.png', isOnline: true }
+        ],
+        messages: [],
+        unreadCount: 0,
+        lastMessage: undefined
+    },
+    {
+        id: 'support-room',
+        participants: [
+            { id: 'support', name: 'Xandeum Support', username: '@support', avatar: '/avatars/support.png', isOnline: true }
+        ],
+        messages: [],
+        unreadCount: 0,
+        lastMessage: undefined
+    }
+];
+
+export const mapMessageToChatMessage = (msg: any, currentUserId: string): ChatMessage => ({
     id: msg.id,
     content: msg.content,
     timestamp: msg.created_at,
@@ -26,82 +50,55 @@ export const mapSupabaseMessageToChatMessage = (msg: any, currentUserId: string)
 });
 
 export const fetchConversations = async (): Promise<ChatConversation[]> => {
-    const currentUser = getCurrentUser();
+    try {
+        const { data: messages, error } = await supabase
+            .from('messages')
+            .select('*')
+            .order('created_at', { ascending: true });
 
-    // 1. Fetch profiles to build participants list
-    const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*');
-
-    if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        return [];
-    }
-
-    // 2. Fetch all messages (for now, simple approach)
-    // In production, you'd fetch per conversation or use a join
-    const { data: messages, error: messagesError } = await supabase
-        .from('messages')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-    if (messagesError) {
-        console.error('Error fetching messages:', messagesError);
-        return [];
-    }
-
-    // 3. Group messages by conversation
-    const conversationMap = new Map<string, ChatMessage[]>();
-
-    messages.forEach((msg: any) => {
-        const chatMsg = mapSupabaseMessageToChatMessage(msg, currentUser.id);
-
-        if (!conversationMap.has(msg.conversation_id)) {
-            conversationMap.set(msg.conversation_id, []);
+        if (error) {
+            console.error('Error fetching messages:', error);
+            return MOCK_CONVERSATIONS;
         }
-        conversationMap.get(msg.conversation_id)?.push(chatMsg);
-    });
 
-    // 4. Build Conversation objects
-    // We'll define fixed conversations based on the mock users for this demo
-    const targetUsers = profiles.filter((p: any) => p.id !== currentUser.id);
+        const currentUser = getCurrentUser();
 
-    const conversations: ChatConversation[] = targetUsers.map((user: any) => {
-        const convId = `conv-${user.id}`;
-        const userMsgs = conversationMap.get(convId) || [];
-        const lastMsg = userMsgs.length > 0 ? userMsgs[userMsgs.length - 1] : null;
+        // Hydrate mock conversations with real messages
+        const conversations = MOCK_CONVERSATIONS.map(conv => {
+            const convMessages = messages
+                .filter((m: any) => m.conversation_id === conv.id)
+                .map((m: any) => mapMessageToChatMessage(m, currentUser.id));
 
-        // Convert profile to ChatUser
-        const participant = mapProfileToChatUser(user);
-
-        return {
-            id: convId,
-            participants: [currentUser, participant],
-            messages: userMsgs,
-            lastMessage: lastMsg || {
-                id: `init-${convId}`,
-                content: "New conversation",
-                timestamp: new Date().toISOString(),
-                senderId: 'system',
-                isFromCurrentUser: false
-            },
-            unreadCount: 0 // logic for unread count can be added later
-        };
-    });
-
-    return conversations;
-};
-
-export const sendMessageToSupabase = async (content: string, conversationId: string, senderId: string) => {
-    const { error } = await supabase
-        .from('messages')
-        .insert({
-            id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            content,
-            conversation_id: conversationId,
-            sender_id: senderId
+            return {
+                ...conv,
+                messages: convMessages,
+                lastMessage: convMessages[convMessages.length - 1],
+                unreadCount: 0 // Reset for now
+            };
         });
 
-    if (error) console.error('Error sending message:', error);
-    return error;
+        return conversations;
+    } catch (err) {
+        console.error('Failed to fetch conversations:', err);
+        return MOCK_CONVERSATIONS;
+    }
 };
+
+export const sendMessage = async (content: string, conversationId: string, senderId: string) => {
+    try {
+        const { error } = await supabase
+            .from('messages')
+            .insert({
+                content,
+                conversation_id: conversationId,
+                sender_id: senderId,
+                created_at: new Date().toISOString() // Client TS, server will override or ignore if default
+            });
+
+        if (error) throw error;
+    } catch (err) {
+        console.error('Error sending message:', err);
+        throw err;
+    }
+};
+

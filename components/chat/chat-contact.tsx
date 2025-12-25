@@ -39,15 +39,19 @@ export default function ChatContact({
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-sm">{otherUser.name}</h3>
           <span className="text-xs text-gray-400">
-            {formatDate(conversation.lastMessage.timestamp)}
+            {conversation.lastMessage ? formatDate(conversation.lastMessage.timestamp) : ''}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-400">{otherUser.username}</p>
+          <p
+            className={cn(
+              "text-xs truncate max-w-[180px]",
+              unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+            )}
+          >
+            {conversation.lastMessage?.content || 'No messages yet'}
+          </p>
         </div>
-        <p className="text-xs text-gray-300 truncate mt-1">
-          {conversation.lastMessage.content}
-        </p>
       </div>
     </div>
   );

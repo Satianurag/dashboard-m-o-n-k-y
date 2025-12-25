@@ -1,0 +1,14 @@
+
+> xandeum-pnode-analytics@0.1.0 dev
+> next dev -H 0.0.0.0 -p 5000 --webpack
+
+⨯ Failed to start server
+Error: listen EADDRINUSE: address already in use 0.0.0.0:5000
+    at <unknown> (Error: listen EADDRINUSE: address already in use 0.0.0.0:5000) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 5000
+}
+[?25h

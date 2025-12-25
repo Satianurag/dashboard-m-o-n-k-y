@@ -17,6 +17,10 @@ export async function calculateSkipRate(): Promise<{ overall: number; byValidato
         return { overall: 0, byValidator: new Map() };
     }
 
+    let totalLeaderSlots = 0;
+    let totalBlocksProduced = 0;
+    const byValidator = new Map<string, number>();
+
     for (const [pubkey, data] of Object.entries(blockProd.byIdentity)) {
         if (!data || !Array.isArray(data)) continue;
         const [leaderSlots, blocksProduced] = data;

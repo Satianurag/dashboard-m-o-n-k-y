@@ -1,5 +1,5 @@
 
-import { getClusterNodes } from "@/lib/pnode-api";
+import { getClusterNodes } from "@/server/api/pnodes";
 import PNodesPage from "./pnodes-client";
 
 // ISR: Revalidate every 60 seconds

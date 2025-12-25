@@ -1,0 +1,26 @@
+
+> xandeum-pnode-analytics@0.1.0 dev
+> next dev -H 0.0.0.0 -p 5000 --webpack
+
+▲ Next.js 16.1.0 (webpack)
+- Local:         http://localhost:5000
+- Network:       http://0.0.0.0:5000
+- Environments: .env.local
+
+✓ Starting...
+✓ Ready in 2.2s
+○ Compiling /pnodes ...
+ GET /pnodes 200 in 7.1s (compile: 6.2s, render: 897ms)
+Serving 240 nodes from Supabase Cache
+Serving 240 nodes from Supabase Cache
+ GET /pnodes 200 in 5.9s (compile: 30ms, render: 5.9s)
+Serving 240 nodes from Supabase Cache
+Serving 240 nodes from Supabase Cache
+Serving 240 nodes from Supabase Cache
+ GET /api/pnodes 200 in 124ms (compile: 18ms, render: 106ms)
+Serving 240 nodes from Supabase Cache
+ GET /api/pnode-data?type=network-stats 200 in 136ms (compile: 12ms, render: 124ms)
+Serving 240 nodes from Supabase Cache
+ GET /api/pnode-data?type=network-stats 200 in 203ms (compile: 20ms, render: 183ms)
+Serving 240 nodes from Supabase Cache
+ GET /api/pnodes 200 in 517ms (compile: 8ms, render: 509ms)

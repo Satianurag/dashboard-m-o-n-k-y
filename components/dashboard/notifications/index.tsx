@@ -17,7 +17,7 @@ export default function Notifications() {
     setMounted(true);
   }, []);
 
-  // Use real-time Supabase notifications
+  // Use local notifications
   const {
     notifications,
     isLoading,
