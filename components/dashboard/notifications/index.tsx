@@ -11,6 +11,11 @@ import { useNotifications } from "@/hooks/use-notifications";
 
 export default function Notifications() {
   const [showAll, setShowAll] = useState(false);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Use real-time Supabase notifications
   const {
@@ -30,11 +35,19 @@ export default function Notifications() {
     notifications.forEach(n => deleteNotification(n.id));
   };
 
-  if (isLoading) {
+  if (!mounted || isLoading) {
     return (
       <Card className="h-full">
-        <CardContent className="p-8 text-center">
-          <p className="text-sm text-muted-foreground">Loading notifications...</p>
+        <CardHeader className="flex items-center justify-between pl-3 pr-1">
+          <CardTitle className="flex items-center gap-2.5 text-sm font-medium uppercase">
+            <Bullet />
+            Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-8 text-center bg-accent/20 m-1.5 rounded-lg">
+          <p className="text-sm text-muted-foreground animate-pulse">
+            {isLoading ? "Connecting to notifications..." : "Initializing..."}
+          </p>
         </CardContent>
       </Card>
     );

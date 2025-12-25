@@ -10,6 +10,7 @@ import ChatConversation from "./chat-conversation";
 import { ChatHeader } from "./chat-header";
 
 const CONTENT_HEIGHT = 420; // Height of expandable content
+const MARQUEE_HEIGHT = 32; // Height of the bottom marquee (h-8 = 32px)
 
 export default function Chat() {
   const {
@@ -32,71 +33,76 @@ export default function Chat() {
   const isExpanded = chatState.state !== "collapsed";
 
   return (
-    <motion.div
-      className="absolute bottom-0 inset-x-0 z-50"
-      initial={{ y: CONTENT_HEIGHT }}
-      animate={{ y: isExpanded ? 0 : CONTENT_HEIGHT }}
-      transition={{ duration: 0.3, ease: "circInOut" }}
+    <div
+      className="absolute inset-x-0 z-50 overflow-hidden pointer-events-none"
+      style={{ bottom: 0 }}
     >
-      {/* Shared Morphing Header - Always at the top */}
-      <ChatHeader
-        variant="desktop"
-        onClick={toggleExpanded}
-        showBackButton={chatState.state === "conversation"}
-        onBackClick={goBack}
-      />
+      <motion.div
+        className="pointer-events-auto"
+        initial={{ y: CONTENT_HEIGHT }}
+        animate={{ y: isExpanded ? 0 : CONTENT_HEIGHT }}
+        transition={{ duration: 0.3, ease: "circInOut" }}
+      >
+        {/* Shared Morphing Header - Always at the top */}
+        <ChatHeader
+          variant="desktop"
+          onClick={toggleExpanded}
+          showBackButton={chatState.state === "conversation"}
+          onBackClick={goBack}
+        />
 
-      {/* Expandable Content - Below the header */}
-      <div className="pt-1 overflow-y-auto" style={{ height: CONTENT_HEIGHT }}>
-        <div className="bg-background text-foreground h-full">
-          <AnimatePresence mode="wait">
-            {chatState.state === "expanded" && (
-              <motion.div
-                key="expanded"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="h-full flex flex-col"
-              >
-                {/* Conversations List */}
-                <div className="flex-1 flex flex-col overflow-y-auto">
-                  {conversations.map((conversation) => (
-                    <ChatPreview
-                      key={conversation.id}
-                      conversation={conversation}
-                      onOpenConversation={openConversation}
-                    />
-                  ))}
+        {/* Expandable Content - Below the header */}
+        <div className="overflow-y-auto" style={{ height: CONTENT_HEIGHT }}>
+          <div className="bg-background text-foreground h-full">
+            <AnimatePresence mode="wait">
+              {chatState.state === "expanded" && (
+                <motion.div
+                  key="expanded"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full flex flex-col"
+                >
+                  {/* Conversations List */}
+                  <div className="flex-1 flex flex-col overflow-y-auto">
+                    {conversations.map((conversation) => (
+                      <ChatPreview
+                        key={conversation.id}
+                        conversation={conversation}
+                        onOpenConversation={openConversation}
+                      />
+                    ))}
 
-                  {/* Footer */}
-                  <div className="mt-auto flex justify-end p-4 sticky bottom-0 bg-gradient-to-t from-background via-background/80 to-black/0">
-                    <Button
-                      size="lg"
-                      variant="secondary"
-                      className="pl-0 py-0 gap-4 overflow-clip"
-                    >
-                      <div className="bg-primary text-primary-foreground h-full aspect-square border-r-2 border-background flex items-center justify-center">
-                        <PlusIcon className="size-4" />
-                      </div>
-                      New Chat
-                    </Button>
+                    {/* Footer */}
+                    <div className="mt-auto flex justify-end p-4 sticky bottom-0 bg-gradient-to-t from-background via-background/80 to-black/0">
+                      <Button
+                        size="lg"
+                        variant="secondary"
+                        className="pl-0 py-0 gap-4 overflow-clip"
+                      >
+                        <div className="bg-primary text-primary-foreground h-full aspect-square border-r-2 border-background flex items-center justify-center">
+                          <PlusIcon className="size-4" />
+                        </div>
+                        New Chat
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
 
-            {chatState.state === "conversation" && activeConversation && (
-              <ChatConversation
-                activeConversation={activeConversation}
-                newMessage={newMessage}
-                setNewMessage={setNewMessage}
-                onSendMessage={handleSendMessage}
-              />
-            )}
-          </AnimatePresence>
+              {chatState.state === "conversation" && activeConversation && (
+                <ChatConversation
+                  activeConversation={activeConversation}
+                  newMessage={newMessage}
+                  setNewMessage={setNewMessage}
+                  onSendMessage={handleSendMessage}
+                />
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

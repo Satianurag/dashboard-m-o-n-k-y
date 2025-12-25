@@ -6,18 +6,18 @@ import Image from 'next/image';
 export function LiveClock() {
   const { time, timezone } = useLiveClock();
 
-  const dayName = time.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-  const date = time.toLocaleDateString('en-US', {
+  const dayName = time ? time.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase() : "---";
+  const dateStr = time ? time.toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric'
-  });
+  }) : "---";
 
-  const hours = time.getHours();
-  const minutes = time.getMinutes().toString().padStart(2, '0');
-  const seconds = time.getSeconds().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  const displayHours = hours % 12 || 12;
+  const hours = time ? time.getHours() : 0;
+  const minutes = time ? time.getMinutes().toString().padStart(2, '0') : "--";
+  const seconds = time ? time.getSeconds().toString().padStart(2, '0') : "--";
+  const ampm = time ? (hours >= 12 ? 'PM' : 'AM') : "--";
+  const displayHours = time ? (hours % 12 || 12) : "--";
 
   return (
     <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -33,7 +33,7 @@ export function LiveClock() {
       <div className="relative z-10 text-center">
         <div className="flex items-baseline justify-between mb-2 gap-4">
           <span className="text-xs text-muted-foreground tracking-wider">{dayName}</span>
-          <span className="text-xs text-muted-foreground">{date}</span>
+          <span className="text-xs text-muted-foreground">{dateStr}</span>
         </div>
 
         <div className="font-display text-4xl md:text-5xl tracking-tight flex items-baseline justify-center gap-1">

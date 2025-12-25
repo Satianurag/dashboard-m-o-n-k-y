@@ -13,13 +13,13 @@ export async function calculateNetworkTPS(): Promise<number> {
 
 export async function calculateSkipRate(): Promise<{ overall: number; byValidator: Map<string, number> }> {
     const blockProd = await fetchBlockProduction();
-    if (!blockProd) return { overall: 0, byValidator: new Map() };
+    if (!blockProd || !blockProd.byIdentity) {
+        return { overall: 0, byValidator: new Map() };
+    }
 
-    let totalLeaderSlots = 0;
-    let totalBlocksProduced = 0;
-    const byValidator = new Map<string, number>();
-
-    for (const [pubkey, [leaderSlots, blocksProduced]] of Object.entries(blockProd.byIdentity)) {
+    for (const [pubkey, data] of Object.entries(blockProd.byIdentity)) {
+        if (!data || !Array.isArray(data)) continue;
+        const [leaderSlots, blocksProduced] = data;
         totalLeaderSlots += leaderSlots;
         totalBlocksProduced += blocksProduced;
         const skipRate = leaderSlots > 0 ? ((leaderSlots - blocksProduced) / leaderSlots) * 100 : 0;

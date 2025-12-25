@@ -47,7 +47,7 @@ export function MobileChat() {
       <SheetTrigger asChild>
         <Button
           size="xl"
-          className="pl-3 fixed gap-4 bottom-4 right-4 z-40 md:hidden"
+          className="pl-3 fixed gap-4 bottom-12 right-4 z-40 md:hidden"
         >
           {/* Status Indicator */}
           <ChatStatusIndicator

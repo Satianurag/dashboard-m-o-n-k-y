@@ -271,7 +271,12 @@ export function useConnectionStatus() {
 }
 
 export function useUserTimezone() {
-    // This doesn't need React Query, it's client-only
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const tz = typeof window !== 'undefined'
         ? Intl.DateTimeFormat().resolvedOptions().timeZone
         : 'UTC';
@@ -283,23 +288,27 @@ export function useUserTimezone() {
     const city = tz.split('/').pop()?.replace(/_/g, ' ') || tz;
 
     return {
-        name: tz,
-        offset: `UTC${sign}${hours}${minutes > 0 ? ':' + minutes.toString().padStart(2, '0') : ''}`,
-        city,
+        name: mounted ? tz : 'UTC',
+        offset: mounted ? `UTC${sign}${hours}${minutes > 0 ? ':' + minutes.toString().padStart(2, '0') : ''}` : 'UTC+0',
+        city: mounted ? city : 'UTC',
+        mounted
     };
 }
 
 export function useLiveClock() {
     // Simple client-side clock, no need for React Query
-    const [time, setTime] = React.useState(new Date());
+    const [time, setTime] = React.useState<Date | null>(null);
+    const [mounted, setMounted] = React.useState(false);
     const timezone = useUserTimezone();
 
     React.useEffect(() => {
+        setMounted(true);
+        setTime(new Date());
         const interval = setInterval(() => setTime(new Date()), 1000);
         return () => clearInterval(interval);
     }, []);
 
-    return { time, timezone };
+    return { time, timezone, mounted };
 }
 
 // Re-export React for compatibility

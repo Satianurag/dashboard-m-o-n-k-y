@@ -11,7 +11,8 @@ export default function Widget() {
   const { time, timezone } = useLiveClock();
   const { data: stats } = useNetworkStats();
 
-  const formatTime = (date: Date) => {
+  const formatTime = (date: Date | null) => {
+    if (!date) return "--:-- --";
     return date.toLocaleTimeString("en-US", {
       hour12: true,
       hour: "numeric",
@@ -19,7 +20,8 @@ export default function Widget() {
     });
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | null) => {
+    if (!date) return { dayOfWeek: "---", restOfDate: "---" };
     const dayOfWeek = date.toLocaleDateString("en-US", {
       weekday: "long",
     });
@@ -56,10 +58,10 @@ export default function Widget() {
             <span className={`w-2 h-2 rounded-full ${stats && stats.networkHealth > 90 ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
             {networkStatus}
           </span>
-          <span>{timezone.city}</span>
+          <span>{timezone.mounted ? timezone.city : "---"}</span>
 
           <Badge variant="secondary" className="bg-accent">
-            {timezone.offset}
+            {timezone.mounted ? timezone.offset : "---"}
           </Badge>
         </div>
 

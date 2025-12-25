@@ -15,6 +15,11 @@ export default function NotificationItem({
   onMarkAsRead,
   onDelete,
 }: NotificationItemProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();

@@ -94,7 +94,11 @@ async function getMergedNodeData(): Promise<Map<string, Partial<PNode>>> {
 
     const nodeMap = new Map<string, Partial<PNode>>();
 
-    const clusterNodes = await fetchClusterNodes();
+    const [clusterNodes, voteAccounts] = await Promise.all([
+        fetchClusterNodes(),
+        fetchVoteAccounts(),
+    ]);
+
     for (const node of clusterNodes) {
         const ip = node.gossip?.split(':')[0] || node.rpc?.split(':')[0] || '';
         const port = parseInt(node.gossip?.split(':')[1] || '8000');
@@ -106,7 +110,6 @@ async function getMergedNodeData(): Promise<Map<string, Partial<PNode>>> {
         });
     }
 
-    const voteAccounts = await fetchVoteAccounts();
     if (voteAccounts) {
         const allVotes = [...voteAccounts.current, ...voteAccounts.delinquent];
         for (const va of allVotes) {
@@ -184,8 +187,10 @@ export async function getClusterNodes(): Promise<PNode[]> {
 
     // Fallback to original client-side logic
     console.log('Using client-side fallback for pNode data.');
-    const podCredits = await fetchPodCredits();
-    const mergedData = await getMergedNodeData();
+    const [podCredits, mergedData] = await Promise.all([
+        fetchPodCredits(),
+        getMergedNodeData(),
+    ]);
 
     if (!podCredits || !podCredits.pods_credits) {
         return Array.from(mergedData.values()).map((node, i) =>
