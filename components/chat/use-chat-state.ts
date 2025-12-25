@@ -21,6 +21,7 @@ interface ChatStore {
   setNewMessage: (message: string) => void;
   handleSendMessage: () => void;
   openConversation: (conversationId: string) => void;
+  openConversationWithUser: (userId: string, userName: string, userAvatar?: string) => void;
   goBack: () => void;
   toggleExpanded: () => void;
   initializeChat: () => void;
@@ -57,8 +58,8 @@ const chatStore = create<ChatStore>((set, get) => ({
     const { supabase } = await import("@/lib/supabase");
     const { mapMessageToChatMessage, getCurrentUser } = await import("@/lib/chat-utils");
 
-    supabase.channel('public:messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+    supabase.channel('public:chat_messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
         const newMsg = payload.new;
         const currentUser = getCurrentUser();
         const chatMsg = mapMessageToChatMessage(newMsg, currentUser.id);
@@ -130,6 +131,46 @@ const chatStore = create<ChatStore>((set, get) => ({
     }
   },
 
+  openConversationWithUser: (userId: string, userName: string, userAvatar?: string) => {
+    const { conversations, setChatState } = get();
+
+    // 1. Check if conversation already exists
+    const existing = conversations.find(c =>
+      c.participants.some(p => p.id === userId)
+    );
+
+    if (existing) {
+      set({
+        chatState: { state: "conversation", activeConversation: existing.id }
+      });
+      return;
+    }
+
+    // 2. Create new optimistic conversation
+    const newId = `dm-${Date.now()}`;
+
+    const newConversation: ChatConversation = {
+      id: newId,
+      participants: [
+        {
+          id: userId,
+          name: userName,
+          username: `@${userName.toLowerCase().replace(/\s+/g, '')}`,
+          avatar: userAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${userId}`,
+          isOnline: Math.random() > 0.5 // Random online status for new nodes
+        }
+      ],
+      messages: [],
+      unreadCount: 0,
+      lastMessage: undefined
+    };
+
+    set({
+      conversations: [...conversations, newConversation],
+      chatState: { state: "conversation", activeConversation: newId }
+    });
+  },
+
   toggleExpanded: () => {
     const { chatState } = get();
     set({
@@ -150,6 +191,7 @@ export const useChatState = () => {
   const setNewMessage = chatStore((state) => state.setNewMessage);
   const handleSendMessage = chatStore((state) => state.handleSendMessage);
   const openConversation = chatStore((state) => state.openConversation);
+  const openConversationWithUser = chatStore((state) => state.openConversationWithUser);
   const goBack = chatStore((state) => state.goBack);
   const toggleExpanded = chatStore((state) => state.toggleExpanded);
   const initializeChat = chatStore((state) => state.initializeChat);
@@ -175,6 +217,7 @@ export const useChatState = () => {
     setNewMessage,
     handleSendMessage,
     openConversation,
+    openConversationWithUser,
     goBack,
     toggleExpanded,
     initializeChat,

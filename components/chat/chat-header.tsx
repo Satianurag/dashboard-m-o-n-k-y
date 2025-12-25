@@ -11,6 +11,7 @@ import PlusIcon from "../icons/plus";
 import MinusIcon from "../icons/minus";
 import ArrowLeftIcon from "../icons/arrow-left";
 import { useIsV0 } from "@/lib/v0-context";
+import { getCurrentUser } from "@/lib/chat-utils";
 
 interface ChatHeaderProps {
   onClick?: () => void;
@@ -36,25 +37,16 @@ export function ChatHeader({
   } = useChatState();
 
   const isV0 = useIsV0();
+  const currentUser = getCurrentUser();
 
   const hasNewMessages = totalUnreadCount > 0;
   const shouldHighlightUnreadMessages =
     variant === "mobile"
       ? false
       : chatState.state === "collapsed" && hasNewMessages;
-
-  // Logic to find other user - simplified since we don't have usage of mockChatData.currentUser
   const otherUser = activeConversation?.participants.find(
-    p => p.id !== "joyboy"
-    // ChatUser doesn't have a flag for "isCurrentUser".
-    // But `activeConversation.participants` is [currentUser, otherUser].
-    // We can just take the second one if we assume order, or we'd need current user ID. 
-    // For now, let's just pick the last one or the one that isn't ID "joyboy" (hardcoded in chat-utils)
+    (p) => p.id !== currentUser.id
   );
-  // Actually, chat-utils hardcoded "joyboy".
-  const currentUserId = "joyboy"; // Hardcoded in chat-utils
-  const otherParticipant = activeConversation?.participants.find(p => p.id !== currentUserId);
-
 
   const handleClick = () => {
     if (onClick) {
@@ -128,7 +120,7 @@ export function ChatHeader({
             // Mobile variant
             if (variant === "mobile") {
               if (chatState.state === "conversation") {
-                return otherParticipant?.name || "CONVERSATION";
+                return otherUser?.name || "CONVERSATION";
               }
               return "ONLINE";
             }
@@ -142,7 +134,7 @@ export function ChatHeader({
             }
 
             if (chatState.state === "conversation") {
-              return otherParticipant?.name || "CONVERSATION";
+              return otherUser?.name || "CONVERSATION";
             }
 
             return "ONLINE";

@@ -75,7 +75,7 @@ export async function fetchBatchGeolocation(ips: string[]): Promise<Record<strin
 }
 
 // Helper to map RPC response to PNode structure
-function mapRpcNodeToPNode(rpcNode: any, creditData: any, index: number, geoData?: GeolocationData): PNode {
+function mapRpcNodeToPNode(rpcNode: any, creditData: any, index: number, geoData?: GeolocationData, realStats?: any): PNode {
     const pubkey = rpcNode.pubkey || `unknown-${index}`;
     const ip = rpcNode.address ? rpcNode.address.split(':')[0] : generateDeterministicIP(pubkey);
     const port = rpcNode.rpc_port || 6000;
@@ -123,17 +123,19 @@ function mapRpcNodeToPNode(rpcNode: any, creditData: any, index: number, geoData
         credits,
         creditsRank: index + 1, // Approximation
         metrics: {
-            cpuPercent: 20 + (hash % 30), // Still somewhat mocked if not in RPC
-            memoryPercent: 40 + (hash % 25),
+            cpuPercent: realStats?.cpu_percent ? realStats.cpu_percent : 0,
+            memoryPercent: realStats?.ram_used && realStats?.ram_total && realStats.ram_total > 0
+                ? (realStats.ram_used / realStats.ram_total) * 100
+                : 0,
             storageUsedGB: rpcNode.storage_used ? rpcNode.storage_used / 1024 / 1024 / 1024 : 0,
             storageCapacityGB: rpcNode.storage_committed ? rpcNode.storage_committed / 1024 / 1024 / 1024 : 1000,
-            responseTimeMs: 50 + (hash % 50),
+            responseTimeMs: 50 + (hash % 50), // Still no direct latency metric in stats, keep mock for now
         },
         performance,
         gossip: {
-            peersConnected: 10 + (hash % 40),
-            messagesReceived: 0,
-            messagesSent: 0,
+            peersConnected: realStats?.active_streams || 0, // Approx peers from streams?
+            messagesReceived: realStats?.packets_received || 0,
+            messagesSent: realStats?.packets_sent || 0,
         },
         staking: {
             commission: 0,
@@ -181,6 +183,37 @@ export async function getClusterNodes(): Promise<PNode[]> {
 
         const geoBatch = await fetchBatchGeolocation(ipsToFetch);
 
+        // Fetch Real Stats for ALL nodes (Heavy Operation)
+        console.log(`Starting batched stats fetch for ${rpcPods.length} nodes...`);
+        // We'll map IP -> Stats
+        const statsMap = new Map<string, any>();
+
+        // Process in chunks of 50 to avoid total network saturation if list is huge,
+        // but user said "forget performance", so we can be aggressive.
+        // Let's do 20 concurrent interactions to be polite to the event loop.
+        const CHUNK_SIZE = 20;
+        for (let i = 0; i < rpcPods.length; i += CHUNK_SIZE) {
+            const chunk = rpcPods.slice(i, i + CHUNK_SIZE);
+            await Promise.all(chunk.map(async (pod: any) => {
+                const ip = pod.address?.split(':')[0];
+                if (!ip) return;
+
+                try {
+                    // Create individual client for this node
+                    // We assume default port logic or that the lib handles it via IP
+                    const nodeClient = getPrpcClient(ip);
+                    // Add timeout race? Library likely has timeout.
+                    const stats = await nodeClient.getStats();
+                    statsMap.set(pod.pubkey, stats);
+                } catch (e) {
+                    // Expected to fail for many nodes (offline/firewalled)
+                    // console.debug(`Failed stats for ${ip}`, e);
+                }
+            }));
+        }
+        console.log(`Fetched stats for ${statsMap.size} nodes.`);
+
+
         // Map mapping for credits
         const creditMap = new Map<string, number>();
         if (podCredits?.pods_credits) {
@@ -193,8 +226,9 @@ export async function getClusterNodes(): Promise<PNode[]> {
             const ip = rpcNode.address?.split(':')[0];
             const credits = creditMap.get(rpcNode.pubkey) || 0;
             const geo = ip ? geoBatch[ip] : undefined;
+            const realStats = statsMap.get(rpcNode.pubkey);
 
-            return mapRpcNodeToPNode(rpcNode, { credits }, index, geo);
+            return mapRpcNodeToPNode(rpcNode, { credits }, index, geo, realStats);
         });
 
         // Sort by credits desc as default

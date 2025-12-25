@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState, useEffect } from 'react';
 import DashboardPageLayout from "@/components/dashboard/layout";
 import BracketsIcon from "@/components/icons/brackets";
 import GearIcon from "@/components/icons/gear";
@@ -44,7 +44,10 @@ export default function DashboardOverview({
 
   const isLoading = nodesLoading || statsLoading || historyLoading;
 
-  const lastUpdatedText = dataUpdatedAt
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const lastUpdatedText = mounted && dataUpdatedAt
     ? `Last updated ${new Date(dataUpdatedAt).toLocaleTimeString()}`
     : 'Connecting...';
 

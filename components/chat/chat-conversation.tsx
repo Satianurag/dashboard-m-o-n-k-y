@@ -7,6 +7,7 @@ import { formatDate, formatTime } from "./utils";
 import type { ChatMessage as ChatMessageType } from "@/types/chat";
 import ArrowRightIcon from "../icons/arrow-right";
 import { Badge } from "../ui/badge";
+import { getCurrentUser } from "@/lib/chat-utils";
 
 const MESSAGE_GROUP_THRESHOLD = 3 * 60 * 1000; // 3 minutes in milliseconds
 
@@ -29,6 +30,8 @@ export default function ChatConversation({
   setNewMessage,
   onSendMessage,
 }: ChatConversationProps) {
+  const currentUser = getCurrentUser();
+
   // Group messages by time and sender
   const groupMessages = (messages: ChatMessageType[]): MessageGroup[] => {
     const groups: MessageGroup[] = [];
@@ -41,7 +44,7 @@ export default function ChatConversation({
         lastGroup &&
         lastGroup.isFromCurrentUser === message.isFromCurrentUser &&
         messageTime - new Date(lastGroup.timestamp).getTime() <=
-          MESSAGE_GROUP_THRESHOLD
+        MESSAGE_GROUP_THRESHOLD
       ) {
         // Add to existing group
         lastGroup.messages.push(message);
@@ -131,16 +134,16 @@ export default function ChatConversation({
                     messageIndex === 0 && group.isFromCurrentUser
                       ? "rounded-br-sm"
                       : messageIndex === 0 && !group.isFromCurrentUser
-                      ? "rounded-bl-sm"
-                      : "",
+                        ? "rounded-bl-sm"
+                        : "",
                     // Last message in group gets more rounded corners on the outer side
                     messageIndex === group.messages.length - 1 &&
                       group.isFromCurrentUser
                       ? "rounded-tr-sm"
                       : messageIndex === group.messages.length - 1 &&
                         !group.isFromCurrentUser
-                      ? "rounded-tl-sm"
-                      : ""
+                        ? "rounded-tl-sm"
+                        : ""
                   )}
                   layout
                 >
@@ -157,11 +160,10 @@ export default function ChatConversation({
         <Input
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          placeholder={`Message ${
-            activeConversation.participants.find(
-              (p) => p.id !== "joyboy" // Using current user ID
-            )?.name
-          }`}
+          placeholder={`Message ${activeConversation.participants.find(
+            (p) => p.id !== currentUser.id
+          )?.name
+            }`}
           className="flex-1 rounded-none border-none text-foreground placeholder-foreground/40 text-sm"
           onKeyDown={(e) => {
             if (e.key === "Enter") onSendMessage();

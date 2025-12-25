@@ -25,8 +25,10 @@ import {
     Cpu,
     Gauge,
     TrendingUp,
-    ExternalLink
+    ExternalLink,
+    MessageSquare,
 } from "lucide-react";
+import { useChatState } from "@/components/chat/use-chat-state";
 import {
     ResponsiveContainer,
     AreaChart,
@@ -126,6 +128,7 @@ function StatCard({
 export default function NodeDetailPage({ params }: PageProps) {
     const { pubkey } = use(params);
     const { data: nodes, isLoading } = usePNodes();
+    const { openConversationWithUser } = useChatState();
 
     const node = useMemo(() => {
         if (!nodes) return null;
@@ -215,6 +218,23 @@ export default function NodeDetailPage({ params }: PageProps) {
                     </Button>
                 </Link>
                 <div className="flex items-center gap-2">
+                    <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => {
+                            if (node) {
+                                openConversationWithUser(
+                                    node.pubkey,
+                                    `Node ${node.pubkey.slice(0, 6)}`,
+                                    // Use specific avatars for reliability if they match our known list, else random
+                                    undefined
+                                );
+                            }
+                        }}
+                    >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Message Operator
+                    </Button>
                     <Button variant="outline" size="sm" onClick={handleCopyPubkey}>
                         <Copy className="w-4 h-4 mr-2" />
                         Copy Pubkey

@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { ChatConversation } from "@/types/chat";
 import { formatDate } from "./utils";
 import { cn } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/chat-utils";
 
 interface ChatPreviewProps {
   conversation: ChatConversation;
@@ -12,9 +13,9 @@ export default function ChatPreview({
   conversation,
   onOpenConversation,
 }: ChatPreviewProps) {
-  const currentUserId = "joyboy"; // Hardcoded default
+  const currentUser = getCurrentUser();
   const user = conversation.participants.find(
-    (p) => p.id !== currentUserId
+    (p) => p.id !== currentUser.id
   );
 
   if (!user) return null;
@@ -30,7 +31,7 @@ export default function ChatPreview({
           alt={user.name}
           width={96}
           height={96}
-          className="rounded-lg size-14"
+          className="rounded-lg size-14 object-cover"
         />
         {conversation.unreadCount > 0 && (
           <div className="absolute -top-2 -left-2 bg-primary text-primary-foreground text-xs size-5 rounded flex items-center justify-center font-semibold border-2 border-background">
@@ -42,24 +43,21 @@ export default function ChatPreview({
       <div className="flex-1 min-w-0 group-hover:bg-accent px-2 py-1 rounded">
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
-            <h3 className="font-display text-lg">{user.name}</h3>
-            <p className="text-xs text-foreground/50">{user.username}</p>
+            <h3 className="font-display text-lg truncate max-w-[120px]">{user.name}</h3>
+            <p className="text-xs text-foreground/50 truncate max-w-[80px]">{user.username}</p>
           </div>
-          <span className="text-xs text-foreground/40">
+          <span className="text-xs text-foreground/40 shrink-0">
             {conversation.lastMessage ? formatDate(conversation.lastMessage.timestamp) : ''}
           </span>
         </div>
-
-        <div className="flex items-center justify-between mt-1">
-          <p
-            className={cn(
-              "text-xs truncate pr-4",
-              conversation.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
-            )}
-          >
-            {conversation.lastMessage?.content || 'No messages yet'}
-          </p>
-        </div>
+        <p
+          className={cn(
+            "text-sm text-foreground/70 truncate mt-1",
+            conversation.unreadCount > 0 && "font-bold text-foreground"
+          )}
+        >
+          {conversation.lastMessage?.content || 'No messages yet'}
+        </p>
       </div>
     </div>
   );

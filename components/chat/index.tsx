@@ -10,7 +10,7 @@ import ChatConversation from "./chat-conversation";
 import { ChatHeader } from "./chat-header";
 
 const CONTENT_HEIGHT = 420; // Height of expandable content
-const MARQUEE_HEIGHT = 24; // Height of the bottom marquee (h-6 = 24px)
+const HEADER_HEIGHT = 56; // h-14 = 56px
 
 export default function Chat() {
   const {
@@ -39,8 +39,8 @@ export default function Chat() {
     >
       <motion.div
         className="pointer-events-auto"
-        initial={{ y: CONTENT_HEIGHT }}
-        animate={{ y: isExpanded ? 0 : CONTENT_HEIGHT }}
+        initial={{ y: CONTENT_HEIGHT - HEADER_HEIGHT }}
+        animate={{ y: isExpanded ? 0 : CONTENT_HEIGHT - HEADER_HEIGHT }}
         transition={{ duration: 0.3, ease: "circInOut" }}
       >
         {/* Shared Morphing Header - Always at the top */}
