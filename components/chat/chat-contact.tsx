@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import type { ChatConversation, ChatUser } from "@/types/chat";
 import { formatDate } from "./utils";
@@ -46,7 +47,7 @@ export default function ChatContact({
           <p
             className={cn(
               "text-xs truncate max-w-[180px]",
-              unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+              conversation.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
             )}
           >
             {conversation.lastMessage?.content || 'No messages yet'}

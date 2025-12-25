@@ -29,7 +29,7 @@ export function NetworkMarquee() {
     const marqueeItems = stats ? [
         { label: 'NODES ONLINE', value: `${stats.onlineNodes}/${stats.totalNodes}` },
         { label: 'NETWORK HEALTH', value: `${stats.networkHealth.toFixed(1)}%` },
-        { label: 'AVG UPTIME', value: `${stats.averageUptime.toFixed(1)}%` },
+
         { label: 'AVG RESPONSE', value: `${stats.averageResponseTime.toFixed(0)}ms` },
         { label: 'STORAGE USED', value: `${stats.totalStorageUsedTB.toFixed(1)}TB` },
         { label: 'STORAGE CAPACITY', value: `${stats.totalStorageCapacityTB.toFixed(1)}TB` },

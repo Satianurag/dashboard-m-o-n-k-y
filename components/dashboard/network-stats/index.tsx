@@ -90,7 +90,7 @@ export function NetworkStatsGrid({ stats }: NetworkStatsProps) {
       <StatCard
         label="Avg Response"
         value={`${stats.averageResponseTime.toFixed(0)}ms`}
-        subValue={`${stats.averageUptime.toFixed(1)}% avg uptime`}
+        subValue="Network Latency"
         trend={stats.averageResponseTime < 100 ? 'up' : stats.averageResponseTime < 150 ? 'neutral' : 'down'}
         variant={stats.averageResponseTime < 100 ? 'success' : 'default'}
         tooltip="Mean network latency across all online nodes. Lower is better. Green indicates excellent response times."

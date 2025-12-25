@@ -72,7 +72,10 @@ export function ChatHeader({
         "cursor-pointer flex items-center gap-3 transition-all duration-300",
         shouldHighlightUnreadMessages
           ? "w-full h-14 bg-primary text-primary-foreground rounded-t-lg px-4 py-3"
-          : "w-full h-14 bg-background text-foreground rounded-t-lg px-4 py-3",
+          : cn(
+            "w-full bg-background text-foreground rounded-t-lg px-4 py-3 transition-all duration-300",
+            chatState.state === "collapsed" ? "h-10" : "h-14"
+          ),
         className
       )}
       onClick={handleClick}

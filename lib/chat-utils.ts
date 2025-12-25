@@ -24,36 +24,18 @@ import { supabase } from '@/lib/supabase';
 // In a full app, conversations would also be in DB.
 const BASE_CONVERSATIONS: ChatConversation[] = [
     {
-        id: 'global-room',
-        participants: [
-            { id: 'system', name: 'Xandeum Network', username: '@network', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=XN', isOnline: true }
-        ],
-        messages: [],
-        unreadCount: 0,
-        lastMessage: undefined
-    },
-    {
-        id: 'support-room',
-        participants: [
-            { id: 'support', name: 'Xandeum Support', username: '@support', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=support', isOnline: true }
-        ],
-        messages: [],
-        unreadCount: 0,
-        lastMessage: undefined
-    },
-    {
         id: 'krimson-chat',
         participants: [
-            { id: 'krimson', name: 'Krimson', username: '@krimson', avatar: '/avatars/user_krimson.png', isOnline: true }
+            { id: 'krimson', name: 'KRIMSON', username: '@KRIMSON', avatar: '/avatars/user_krimson.png', isOnline: true }
         ],
         messages: [],
-        unreadCount: 2,
+        unreadCount: 1,
         lastMessage: undefined
     },
     {
         id: 'mati-chat',
         participants: [
-            { id: 'mati', name: 'Mati', username: '@mati', avatar: '/avatars/user_mati.png', isOnline: false }
+            { id: 'mati', name: 'MATI', username: '@MATI', avatar: '/avatars/user_mati.png', isOnline: false }
         ],
         messages: [],
         unreadCount: 0,
@@ -62,10 +44,28 @@ const BASE_CONVERSATIONS: ChatConversation[] = [
     {
         id: 'pek-chat',
         participants: [
-            { id: 'pek', name: 'Pek', username: '@pek', avatar: '/avatars/user_pek.png', isOnline: true }
+            { id: 'pek', name: 'PEK', username: '@KRIMSON', avatar: '/avatars/user_pek.png', isOnline: true }
         ],
         messages: [],
-        unreadCount: 5,
+        unreadCount: 0,
+        lastMessage: undefined
+    },
+    {
+        id: 'v0-chat',
+        participants: [
+            { id: 'v0', name: 'V0', username: '@KRIMSON', avatar: '/avatars/user_krimson.png', isOnline: false }
+        ],
+        messages: [],
+        unreadCount: 0,
+        lastMessage: undefined
+    },
+    {
+        id: 'rampant-chat',
+        participants: [
+            { id: 'rampant', name: 'RAMPANT', username: '@RAMPANT.WORKS', avatar: '/avatars/user_mati.png', isOnline: false }
+        ],
+        messages: [],
+        unreadCount: 0,
         lastMessage: undefined
     }
 ];

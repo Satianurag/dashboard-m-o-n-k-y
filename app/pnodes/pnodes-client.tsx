@@ -47,7 +47,7 @@ export default function PNodesPage({ initialNodes }: { initialNodes: PNode[] | n
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [sortBy, setSortBy] = useState<'credits' | 'latency' | 'uptime'>('credits');
+  const [sortBy, setSortBy] = useState<'credits' | 'latency'>('credits');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -79,7 +79,7 @@ export default function PNodesPage({ initialNodes }: { initialNodes: PNode[] | n
       switch (sortBy) {
         case 'credits': aVal = a.credits || 0; bVal = b.credits || 0; break;
         case 'latency': aVal = a.metrics.responseTimeMs; bVal = b.metrics.responseTimeMs; break;
-        case 'uptime': aVal = a.uptime; bVal = b.uptime; break;
+
       }
       return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
     });
@@ -107,9 +107,9 @@ export default function PNodesPage({ initialNodes }: { initialNodes: PNode[] | n
     if (!nodes) return { all: 0, online: 0, offline: 0, degraded: 0 };
     return {
       all: nodes.length,
-      online: nodes.filter(n => n.status === 'online').length,
-      offline: nodes.filter(n => n.status === 'offline').length,
-      degraded: nodes.filter(n => n.status === 'degraded').length,
+      online: nodes.filter((n: PNode) => n.status === 'online').length,
+      offline: nodes.filter((n: PNode) => n.status === 'offline').length,
+      degraded: nodes.filter((n: PNode) => n.status === 'degraded').length,
     };
   }, [nodes]);
 
@@ -204,12 +204,7 @@ export default function PNodesPage({ initialNodes }: { initialNodes: PNode[] | n
           >
             Latency {sortBy === 'latency' && (sortOrder === 'desc' ? '↓' : '↑')}
           </div>
-          <div
-            className="col-span-1 cursor-pointer hover:text-primary"
-            onClick={() => toggleSort('uptime')}
-          >
-            Uptime {sortBy === 'uptime' && (sortOrder === 'desc' ? '↓' : '↑')}
-          </div>
+
           <div className="col-span-1">Storage</div>
         </div>
 
@@ -271,10 +266,7 @@ export default function PNodesPage({ initialNodes }: { initialNodes: PNode[] | n
                   {node.metrics.responseTimeMs.toFixed(0)}ms
                 </div>
 
-                {/* Uptime */}
-                <div className="col-span-1 font-mono text-sm">
-                  {node.uptime.toFixed(1)}%
-                </div>
+
 
                 {/* Storage */}
                 <div className="col-span-1 font-mono text-sm">

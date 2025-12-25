@@ -132,7 +132,7 @@ export default function NodeDetailPage({ params }: PageProps) {
 
     const node = useMemo(() => {
         if (!nodes) return null;
-        return nodes.find(n => n.pubkey === pubkey);
+        return nodes.find((n: PNode) => n.pubkey === pubkey);
     }, [nodes, pubkey]);
 
     const handleCopyPubkey = () => {
@@ -156,18 +156,11 @@ export default function NodeDetailPage({ params }: PageProps) {
         }
     };
 
-    // Generate chart data from history
-    const uptimeChartData = useMemo(() => {
-        if (!node?.history?.uptimeHistory) return [];
-        return node.history.uptimeHistory.map((value, i) => ({
-            time: `${i + 1}d`,
-            uptime: value,
-        }));
-    }, [node]);
+
 
     const latencyChartData = useMemo(() => {
         if (!node?.history?.latencyHistory) return [];
-        return node.history.latencyHistory.map((value, i) => ({
+        return node.history.latencyHistory.map((value: number, i: number) => ({
             time: `${i + 1}d`,
             latency: value,
         }));
@@ -284,13 +277,7 @@ export default function NodeDetailPage({ params }: PageProps) {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <StatCard
-                    label="Uptime"
-                    value={`${node.uptime.toFixed(1)}%`}
-                    icon={Clock}
-                    color="text-green-400"
-                    tooltip="Average uptime percentage over the last 30 days"
-                />
+
                 <StatCard
                     label="Latency"
                     value={`${node.metrics.responseTimeMs.toFixed(0)}ms`}
@@ -432,41 +419,7 @@ export default function NodeDetailPage({ params }: PageProps) {
 
             {/* Performance Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="rounded-lg border-2 border-border overflow-hidden">
-                    <div className="px-4 py-2 border-b border-border bg-accent/20">
-                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Uptime History (30d)</span>
-                    </div>
-                    <div className="p-4 h-[200px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={uptimeChartData}>
-                                <defs>
-                                    <linearGradient id="uptimeGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                                <XAxis dataKey="time" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
-                                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} domain={[0, 100]} />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: 'hsl(var(--popover))',
-                                        border: '1px solid hsl(var(--border))',
-                                        borderRadius: '8px',
-                                        fontSize: '12px',
-                                    }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="uptime"
-                                    stroke="#22c55e"
-                                    fill="url(#uptimeGradient)"
-                                    strokeWidth={2}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+
 
                 <div className="rounded-lg border-2 border-border overflow-hidden">
                     <div className="px-4 py-2 border-b border-border bg-accent/20">

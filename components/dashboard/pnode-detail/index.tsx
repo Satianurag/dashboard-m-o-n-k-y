@@ -43,9 +43,9 @@ export function PNodeDetail({ node, open, onClose }: PNodeDetailProps) {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <span className={cn('w-3 h-3 rounded-full', 
+            <span className={cn('w-3 h-3 rounded-full',
               node.status === 'online' ? 'bg-green-500 animate-pulse' :
-              node.status === 'offline' ? 'bg-red-500' : 'bg-yellow-500'
+                node.status === 'offline' ? 'bg-red-500' : 'bg-yellow-500'
             )} />
             <span className="font-display">PNODE DETAILS</span>
           </DialogTitle>
@@ -63,21 +63,21 @@ export function PNodeDetail({ node, open, onClose }: PNodeDetailProps) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <MetricCard 
-              label="Status" 
+            <MetricCard
+              label="Status"
               value={node.status.toUpperCase()}
             />
-            <MetricCard 
-              label="Version" 
+            <MetricCard
+              label="Version"
               value={`v${node.version}`}
             />
-            <MetricCard 
-              label="Location" 
+            <MetricCard
+              label="Location"
               value={node.location?.city || 'Unknown'}
               subValue={node.location?.country}
             />
-            <MetricCard 
-              label="Last Seen" 
+            <MetricCard
+              label="Last Seen"
               value={new Date(node.lastSeen).toLocaleTimeString()}
               subValue={new Date(node.lastSeen).toLocaleDateString()}
             />
@@ -86,20 +86,17 @@ export function PNodeDetail({ node, open, onClose }: PNodeDetailProps) {
           <div>
             <div className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Performance Metrics</div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <MetricCard 
-                label="Uptime" 
-                value={`${node.uptime.toFixed(1)}%`}
-              />
-              <MetricCard 
-                label="Response Time" 
+
+              <MetricCard
+                label="Response Time"
                 value={`${node.metrics.responseTimeMs.toFixed(0)}ms`}
               />
-              <MetricCard 
-                label="CPU Usage" 
+              <MetricCard
+                label="CPU Usage"
                 value={`${node.metrics.cpuPercent.toFixed(1)}%`}
               />
-              <MetricCard 
-                label="Memory" 
+              <MetricCard
+                label="Memory"
                 value={`${node.metrics.memoryPercent.toFixed(1)}%`}
               />
             </div>
@@ -113,7 +110,7 @@ export function PNodeDetail({ node, open, onClose }: PNodeDetailProps) {
                 <span>{node.metrics.storageCapacityGB} GB total</span>
               </div>
               <div className="h-3 bg-accent rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all"
                   style={{ width: `${(node.metrics.storageUsedGB / node.metrics.storageCapacityGB) * 100}%` }}
                 />
@@ -127,16 +124,16 @@ export function PNodeDetail({ node, open, onClose }: PNodeDetailProps) {
           <div>
             <div className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Gossip Network</div>
             <div className="grid grid-cols-3 gap-3">
-              <MetricCard 
-                label="Peers Connected" 
+              <MetricCard
+                label="Peers Connected"
                 value={node.gossip.peersConnected.toString()}
               />
-              <MetricCard 
-                label="Messages Received" 
+              <MetricCard
+                label="Messages Received"
                 value={node.gossip.messagesReceived.toLocaleString()}
               />
-              <MetricCard 
-                label="Messages Sent" 
+              <MetricCard
+                label="Messages Sent"
                 value={node.gossip.messagesSent.toLocaleString()}
               />
             </div>

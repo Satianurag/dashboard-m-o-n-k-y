@@ -94,7 +94,7 @@ export default function DashboardOverview({
         <DashboardStat
           label="AVG RESPONSE"
           value={`${stats?.averageResponseTime?.toFixed(0) || "0"}ms`}
-          description={`${stats?.averageUptime?.toFixed(1) || "0"}% AVG UPTIME`}
+          description="NETWORK LATENCY"
           icon={BoomIcon}
           intent={stats?.averageResponseTime && stats.averageResponseTime < 100 ? "positive" : "neutral"}
           tag={stats?.averageResponseTime && stats.averageResponseTime < 100 ? "FAST" : undefined}
@@ -117,7 +117,7 @@ export default function DashboardOverview({
               {xScore.grade}
             </span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="p-3 rounded-lg bg-accent/20 border border-border">
               <div className="text-xs text-muted-foreground uppercase flex items-center gap-1">
                 Overall
@@ -139,13 +139,7 @@ export default function DashboardOverview({
               </div>
               <div className="text-xl font-display text-green-400">{xScore.dataAvailabilityLatency.toFixed(1)}</div>
             </div>
-            <div className="p-3 rounded-lg bg-accent/20 border border-border">
-              <div className="text-xs text-muted-foreground uppercase flex items-center gap-1">
-                Uptime
-                <InfoTooltip content="Percentage of time nodes have been online and responsive. Target: 99.9%+" />
-              </div>
-              <div className="text-xl font-display text-blue-400">{xScore.uptime.toFixed(1)}</div>
-            </div>
+
             <div className="p-3 rounded-lg bg-accent/20 border border-border">
               <div className="text-xs text-muted-foreground uppercase flex items-center gap-1">
                 Gossip
@@ -163,7 +157,7 @@ export default function DashboardOverview({
             Network Map
           </span>
           <span className="text-xs text-primary">
-            {nodes?.filter(n => n.status === 'online').length || 0} nodes online
+            {nodes?.filter((n: any) => n.status === 'online').length || 0} nodes online
           </span>
         </div>
         <div className="h-[400px]">

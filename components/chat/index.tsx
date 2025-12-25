@@ -39,8 +39,8 @@ export default function Chat() {
     >
       <motion.div
         className="pointer-events-auto"
-        initial={{ y: CONTENT_HEIGHT - HEADER_HEIGHT }}
-        animate={{ y: isExpanded ? 0 : CONTENT_HEIGHT - HEADER_HEIGHT }}
+        initial={{ y: CONTENT_HEIGHT }}
+        animate={{ y: isExpanded ? 0 : CONTENT_HEIGHT }}
         transition={{ duration: 0.3, ease: "circInOut" }}
       >
         {/* Shared Morphing Header - Always at the top */}

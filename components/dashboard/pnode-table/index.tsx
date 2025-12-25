@@ -10,7 +10,7 @@ interface PNodeTableProps {
   onNodeSelect?: (node: PNode) => void;
 }
 
-type SortField = 'status' | 'performance' | 'uptime' | 'responseTime' | 'storage' | 'location';
+type SortField = 'status' | 'performance' | 'responseTime' | 'storage' | 'location';
 type SortOrder = 'asc' | 'desc';
 
 export function PNodeTable({ nodes, onNodeSelect }: PNodeTableProps) {
@@ -46,15 +46,13 @@ export function PNodeTable({ nodes, onNodeSelect }: PNodeTableProps) {
         case 'performance':
           comparison = a.performance.score - b.performance.score;
           break;
-        case 'uptime':
-          comparison = a.uptime - b.uptime;
-          break;
+
         case 'responseTime':
           comparison = a.metrics.responseTimeMs - b.metrics.responseTimeMs;
           break;
         case 'storage':
-          comparison = (a.metrics.storageUsedGB / a.metrics.storageCapacityGB) - 
-                       (b.metrics.storageUsedGB / b.metrics.storageCapacityGB);
+          comparison = (a.metrics.storageUsedGB / a.metrics.storageCapacityGB) -
+            (b.metrics.storageUsedGB / b.metrics.storageCapacityGB);
           break;
         case 'location':
           comparison = (a.location?.country || '').localeCompare(b.location?.country || '');
@@ -145,7 +143,7 @@ export function PNodeTable({ nodes, onNodeSelect }: PNodeTableProps) {
               <th className="px-3 py-2 text-left text-xs uppercase tracking-wider">pNode</th>
               <SortHeader field="location">Location</SortHeader>
               <SortHeader field="performance">Score</SortHeader>
-              <SortHeader field="uptime">Uptime</SortHeader>
+
               <SortHeader field="responseTime">Latency</SortHeader>
               <SortHeader field="storage">Storage</SortHeader>
               <th className="px-3 py-2 text-left text-xs uppercase tracking-wider">Peers</th>
@@ -191,8 +189,8 @@ export function PNodeTable({ nodes, onNodeSelect }: PNodeTableProps) {
                         className={cn(
                           'h-full rounded-full',
                           node.performance.tier === 'excellent' ? 'bg-green-500' :
-                          node.performance.tier === 'good' ? 'bg-blue-500' :
-                          node.performance.tier === 'fair' ? 'bg-yellow-500' : 'bg-red-500'
+                            node.performance.tier === 'good' ? 'bg-blue-500' :
+                              node.performance.tier === 'fair' ? 'bg-yellow-500' : 'bg-red-500'
                         )}
                         style={{ width: `${node.performance.score}%` }}
                       />
@@ -202,14 +200,12 @@ export function PNodeTable({ nodes, onNodeSelect }: PNodeTableProps) {
                     </span>
                   </div>
                 </td>
-                <td className="px-3 py-3">
-                  <span className="text-xs font-mono">{node.uptime.toFixed(1)}%</span>
-                </td>
+
                 <td className="px-3 py-3">
                   <span className={cn(
                     'text-xs font-mono',
                     node.metrics.responseTimeMs < 80 ? 'text-green-400' :
-                    node.metrics.responseTimeMs < 120 ? 'text-yellow-400' : 'text-red-400'
+                      node.metrics.responseTimeMs < 120 ? 'text-yellow-400' : 'text-red-400'
                   )}>
                     {node.metrics.responseTimeMs.toFixed(0)}ms
                   </span>
