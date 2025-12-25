@@ -182,46 +182,7 @@ export default function DashboardOverview({
         </div>
       </div>
 
-      {nodes && (
-        <div className="rounded-lg border-2 border-border p-4">
-          <div className="text-xs text-muted-foreground uppercase tracking-wider mb-4">
-            Top Performing pNodes
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...nodes]
-              .filter(n => n.status === 'online')
-              .sort((a, b) => b.performance.score - a.performance.score)
-              .slice(0, 4)
-              .map((node, index) => (
-                <div
-                  key={node.id}
-                  className="p-4 rounded-lg bg-accent/20 border border-border hover:border-primary/50 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-display text-primary">#{index + 1}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${node.performance.tier === 'excellent' ? 'bg-green-500/20 text-green-400' :
-                      node.performance.tier === 'good' ? 'bg-blue-500/20 text-blue-400' :
-                        'bg-yellow-500/20 text-yellow-400'
-                      }`}>
-                      {node.performance.tier.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="font-mono text-sm truncate mb-1">
-                    {node.pubkey.slice(0, 12)}...
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {node.location?.city}, {node.location?.countryCode}
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Score</span>
-                    <span className="font-mono text-primary">{node.performance.score.toFixed(1)}</span>
-                  </div>
-                </div>
-              ))
-            }
-          </div>
-        </div>
-      )}
+      {/* Top Performing pNodes removed as requested */}
     </DashboardPageLayout>
   );
 }

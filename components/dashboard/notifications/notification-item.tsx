@@ -100,7 +100,7 @@ export default function NotificationItem({
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   <h4
                     className={cn(
-                      "text-sm font-medium truncate",
+                      "text-sm font-medium truncate uppercase",
                       !notification.read && "font-semibold"
                     )}
                   >

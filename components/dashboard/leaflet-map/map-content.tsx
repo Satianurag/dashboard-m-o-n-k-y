@@ -27,14 +27,13 @@ export function MapContent({ nodes }: MapContentProps) {
             center: [20, 0],
             zoom: 2,
             zoomControl: true,
-            attributionControl: true,
+            attributionControl: false,
         });
 
         mapRef.current = map;
 
         // Add CartoDB Dark Matter tiles
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-            attribution: '©OpenStreetMap, ©CartoDB',
             subdomains: 'abcd',
             maxZoom: 19,
         }).addTo(map);
