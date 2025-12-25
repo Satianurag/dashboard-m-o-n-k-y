@@ -13,6 +13,7 @@ import AtomIcon from "@/components/icons/atom";
 import GlobeIcon from "@/components/icons/globe";
 import { usePNodes, useNetworkStats, usePerformanceHistory, useGossipEvents, useXScore } from "@/hooks/use-pnode-data-query";
 import DashboardStat from "@/components/dashboard/stat";
+import { StatCard } from "@/components/dashboard/stat-card";
 import { NetworkChart } from "@/components/dashboard/network-chart";
 import { InfoTooltip } from "@/components/dashboard/info-tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -107,101 +108,59 @@ export default function DashboardOverview({
       </div>
 
       {xScore && (
-        <div className="rounded-lg border-2 border-border overflow-hidden mb-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4">
-            {/* Network X-Score */}
-            <div className="border-r border-b lg:border-b-0 border-border">
-              <div className="flex items-center justify-between p-3 border-b border-border">
-                <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                  <Bullet variant={
-                    xScore.grade === 'S' || xScore.grade === 'A' ? "success" :
-                      xScore.grade === 'B' ? "warning" : "destructive"
-                  } />
-                  Network X-Score
-                </div>
-                <TrophyIcon className="size-4 text-muted-foreground" />
-              </div>
-              <div className="bg-accent p-3">
-                <div className="text-3xl font-display">{xScore.grade}</div>
-                <p className="text-xs font-medium text-muted-foreground tracking-wide">SCORE: {xScore.overall.toFixed(1)}</p>
-              </div>
-            </div>
-
-            {/* Throughput */}
-            <div className="border-b lg:border-b-0 lg:border-r border-border">
-              <div className="flex items-center justify-between p-3 border-b border-border">
-                <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                  <Bullet variant="success" />
-                  Throughput
-                </div>
-                <ServerIcon className="size-4 text-muted-foreground" />
-              </div>
-              <div className="bg-accent p-3">
-                <div className="text-3xl font-display">{xScore.storageThroughput.toFixed(1)}</div>
-                <p className="text-xs font-medium text-muted-foreground tracking-wide">STORAGE OPS</p>
-              </div>
-            </div>
-
-            {/* Data Latency */}
-            <div className="border-r border-border">
-              <div className="flex items-center justify-between p-3 border-b border-border">
-                <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                  <Bullet variant="success" />
-                  Data Latency
-                </div>
-                <AtomIcon className="size-4 text-muted-foreground" />
-              </div>
-              <div className="bg-accent p-3">
-                <div className="text-3xl font-display">{xScore.dataAvailabilityLatency.toFixed(1)}</div>
-                <p className="text-xs font-medium text-muted-foreground tracking-wide">AVAILABILITY</p>
-              </div>
-            </div>
-
-            {/* Gossip Health */}
-            <div>
-              <div className="flex items-center justify-between p-3 border-b border-border">
-                <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                  <Bullet variant="success" />
-                  Gossip Health
-                </div>
-                <GlobeIcon className="size-4 text-muted-foreground" />
-              </div>
-              <div className="bg-accent p-3">
-                <div className="text-3xl font-display">{xScore.gossipHealth.toFixed(1)}</div>
-                <p className="text-xs font-medium text-muted-foreground tracking-wide">PROTOCOL SYNC</p>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <StatCard
+            label="NETWORK X-SCORE"
+            value={xScore.grade}
+            description={`SCORE: ${xScore.overall.toFixed(1)}`}
+            icon={TrophyIcon}
+            intent={xScore.grade === 'S' || xScore.grade === 'A' ? "positive" : xScore.grade === 'B' ? "neutral" : "negative"}
+          />
+          <StatCard
+            label="THROUGHPUT"
+            value={xScore.storageThroughput.toFixed(1)}
+            description="STORAGE OPS"
+            icon={ServerIcon}
+            intent="positive"
+          />
+          <StatCard
+            label="DATA LATENCY"
+            value={xScore.dataAvailabilityLatency.toFixed(1)}
+            description="AVAILABILITY"
+            icon={AtomIcon}
+            intent="positive"
+          />
+          <StatCard
+            label="GOSSIP HEALTH"
+            value={xScore.gossipHealth.toFixed(1)}
+            description="PROTOCOL SYNC"
+            icon={GlobeIcon}
+            intent="positive"
+          />
         </div>
       )}
 
-      <div className="rounded-lg border-2 border-border overflow-hidden">
-        <div className="px-4 py-2 border-b border-border bg-accent/20 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Network Map
-          </span>
-          <span className="text-xs text-primary">
-            {nodes?.filter((n: any) => n.status === 'online').length || 0} nodes online
-          </span>
-        </div>
-        <div className="h-[400px]">
+      <StatCard
+        label="NETWORK MAP"
+        icon={GlobeIcon}
+        description={`${nodes?.filter((n: any) => n.status === 'online').length || 0} nodes online`}
+        className="mb-6 font-display"
+      >
+        <div className="h-[400px] -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4">
           {nodes && <LeafletMap nodes={nodes} />}
         </div>
-      </div>
+      </StatCard>
 
-      <div className="rounded-lg border-2 border-border overflow-hidden">
-        <div className="px-4 py-2 border-b border-border bg-accent/20 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Network Performance (24h)
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {stats?.gossipMessages24h.toLocaleString()} gossip messages
-          </span>
-        </div>
-        <div className="p-4">
+      <StatCard
+        label="NETWORK PERFORMANCE (24H)"
+        icon={BoomIcon}
+        description={`${stats?.gossipMessages24h.toLocaleString()} GOSSIP MESSAGES`}
+        className="mb-6"
+      >
+        <div className="p-0 md:mt-4">
           {history && <NetworkChart data={history} />}
         </div>
-      </div>
+      </StatCard>
 
       {/* Top Performing pNodes removed as requested */}
     </DashboardPageLayout>

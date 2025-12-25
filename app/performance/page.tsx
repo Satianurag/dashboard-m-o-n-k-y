@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import DashboardPageLayout from "@/components/dashboard/layout";
-import TrophyIcon from "@/components/icons/trophy";
-import StatBlock from "@/components/dashboard/stat-block";
 import { usePNodes, usePerformanceHistory } from "@/hooks/use-pnode-data-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Bullet } from "@/components/ui/bullet";
 import { cn } from "@/lib/utils";
+import NumberFlow from "@number-flow/react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -16,6 +17,26 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
+
+// Icons
+import TrophyIcon from "@/components/icons/trophy";
+import BoomIcon from "@/components/icons/boom";
+import ProcessorIcon from "@/components/icons/proccesor";
+import GearIcon from "@/components/icons/gear";
+import ServerIcon from "@/components/icons/server";
+
+const TimerIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const ZapIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </svg>
+);
 
 function LoadingState() {
   return (
@@ -28,10 +49,11 @@ function LoadingState() {
   );
 }
 
+import { StatCard } from "@/components/dashboard/stat-card";
+
 export default function PerformancePage() {
   const { data: nodes, isLoading, dataUpdatedAt } = usePNodes();
   const { data: history } = usePerformanceHistory('24h');
-  const [period, setPeriod] = useState<'24h' | '7d' | '30d'>('24h');
 
   if (isLoading && !nodes) {
     return (
@@ -40,6 +62,15 @@ export default function PerformancePage() {
       </DashboardPageLayout>
     );
   }
+
+  const topNodes = nodes?.sort((a: any, b: any) => (b.performanceScore || 0) - (a.performanceScore || 0)).slice(0, 5) || [];
+  const excellentNodes = nodes?.filter((n: any) => (n.performanceScore || 0) >= 90) || [];
+  const goodNodes = nodes?.filter((n: any) => (n.performanceScore || 0) >= 70 && (n.performanceScore || 0) < 90) || [];
+  const fairNodes = nodes?.filter((n: any) => (n.performanceScore || 0) >= 40 && (n.performanceScore || 0) < 70) || [];
+  const poorNodes = nodes?.filter((n: any) => (n.performanceScore || 0) < 40) || [];
+  const avgPerformance = nodes && nodes.length > 0
+    ? nodes.reduce((acc: number, n: any) => acc + (n.performanceScore || 0), 0) / nodes.length
+    : 0;
 
   const onlineNodes = nodes?.filter(n => n.status === 'online') || [];
   const excellentCount = onlineNodes.filter(n => n.performance.tier === 'excellent').length;
@@ -51,9 +82,7 @@ export default function PerformancePage() {
     ? onlineNodes.reduce((acc, n) => acc + n.performance.score, 0) / onlineNodes.length
     : 0;
 
-  const topNodes = [...onlineNodes].sort((a, b) => b.performance.score - a.performance.score).slice(0, 10);
-
-  const historyData = history?.map((h, i) => ({
+  const historyData = history?.map((h: any) => ({
     time: new Date(h.timestamp).getHours() + ':00',
     latency: h.avgResponseTime,
     nodes: h.onlineNodes,
@@ -67,62 +96,64 @@ export default function PerformancePage() {
         icon: TrophyIcon,
       }}
     >
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatBlock
-          label="Avg Score"
+      {/* Top metrics - standardized grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+        <StatCard
+          label="AVG SCORE"
           value={avgScore.toFixed(1)}
-          description="network wide"
-          variant="primary"
+          description="NETWORK WIDE"
+          icon={TrophyIcon}
+          intent="positive"
         />
-        <StatBlock
-          label="Excellent"
+        <StatCard
+          label="EXCELLENT"
           value={excellentCount}
-          description="score > 90"
-          variant="success"
+          description="SCORE > 90"
+          icon={ZapIcon}
+          intent="positive"
         />
-        <StatBlock
-          label="Good"
+        <StatCard
+          label="GOOD"
           value={goodCount}
-          description="score 75-90"
+          description="SCORE 75-90"
+          icon={ProcessorIcon}
+          intent="positive"
         />
-        <StatBlock
-          label="Fair"
+        <StatCard
+          label="FAIR"
           value={fairCount}
-          description="score 50-75"
-          variant="warning"
+          description="SCORE 50-75"
+          icon={GearIcon}
+          intent="neutral"
         />
-        <StatBlock
-          label="Poor"
+        <StatCard
+          label="POOR"
           value={poorCount}
-          description="score < 50"
-          variant="error"
+          description="SCORE < 50"
+          icon={BoomIcon}
+          intent="negative"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-lg border-2 border-border overflow-hidden">
-          <div className="px-4 py-2 border-b border-border bg-accent/20 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">
-              Top 10 Leaderboard
-            </span>
-            <span className="text-xs text-primary">By Performance Score</span>
-          </div>
-          <div className="divide-y divide-border">
-            {topNodes.map((node, i) => (
-              <div key={node.id} className="px-4 py-3 flex items-center gap-4 hover:bg-accent/10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Top 10 Leaderboard */}
+        <StatCard label="TOP 10 LEADERBOARD" icon={TrophyIcon} description="BY PERFORMANCE SCORE">
+          <div className="divide-y divide-border/20 -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4">
+            {topNodes.map((node: any, i: number) => (
+              <div key={node.id} className="px-4 py-3 flex items-center gap-4 hover:bg-card/30 transition-colors">
                 <span className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center font-display text-lg",
                   i === 0 ? "bg-yellow-500/20 text-yellow-400" :
                     i === 1 ? "bg-gray-400/20 text-gray-300" :
                       i === 2 ? "bg-amber-700/20 text-amber-600" :
-                        "bg-accent text-muted-foreground"
+                        "bg-card text-muted-foreground"
                 )}>
                   {i + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-mono text-sm truncate">{node.pubkey.slice(0, 20)}...</div>
-                  <div className="text-xs text-muted-foreground">
-                    {node.location?.city}, {node.location?.countryCode} • {node.uptime.toFixed(1)}% uptime
+                  <div className="font-mono text-sm truncate uppercase">{node.pubkey.slice(0, 20)}...</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-tight">
+                    {node.location?.city}, {node.location?.countryCode} • {node.uptime.toFixed(1)}% UPTIME
                   </div>
                 </div>
                 <div className="text-right">
@@ -134,20 +165,18 @@ export default function PerformancePage() {
                   )}>
                     {node.performance.score.toFixed(1)}
                   </div>
-                  <div className="text-xs text-muted-foreground">{node.metrics.responseTimeMs.toFixed(0)}ms</div>
+                  <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-tight">
+                    {node.metrics.responseTimeMs.toFixed(0)}MS
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </StatCard>
 
-        <div className="rounded-lg border-2 border-border overflow-hidden">
-          <div className="px-4 py-2 border-b border-border bg-accent/20">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">
-              Latency Trends (24h)
-            </span>
-          </div>
-          <div className="p-4 h-[400px]">
+        {/* Latency Trends */}
+        <StatCard label="LATENCY TRENDS (24H)" icon={TimerIcon}>
+          <div className="h-[340px] md:mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={historyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
@@ -163,7 +192,7 @@ export default function PerformancePage() {
                     borderRadius: '8px',
                     fontSize: '12px',
                   }}
-                  formatter={(value) => [`${Number(value).toFixed(0)}ms`]}
+                  formatter={(value) => [`${Number(value).toFixed(0)}MS`]}
                 />
                 <Line
                   type="monotone"
@@ -175,83 +204,84 @@ export default function PerformancePage() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </StatCard>
       </div>
 
-      <div className="rounded-lg border-2 border-border p-4">
-        <div className="text-xs text-muted-foreground uppercase tracking-wider mb-4">
-          Performance Tier Distribution
-        </div>
-        <div className="h-8 rounded-full overflow-hidden flex">
-          {excellentCount > 0 && (
-            <div
-              className="bg-green-500 flex items-center justify-center text-xs font-medium text-white"
-              style={{ width: `${(excellentCount / onlineNodes.length) * 100}%` }}
-            >
-              {excellentCount > 2 && 'Excellent'}
-            </div>
-          )}
-          {goodCount > 0 && (
-            <div
-              className="bg-blue-500 flex items-center justify-center text-xs font-medium text-white"
-              style={{ width: `${(goodCount / onlineNodes.length) * 100}%` }}
-            >
-              {goodCount > 2 && 'Good'}
-            </div>
-          )}
-          {fairCount > 0 && (
-            <div
-              className="bg-yellow-500 flex items-center justify-center text-xs font-medium text-black"
-              style={{ width: `${(fairCount / onlineNodes.length) * 100}%` }}
-            >
-              {fairCount > 2 && 'Fair'}
-            </div>
-          )}
-          {poorCount > 0 && (
-            <div
-              className="bg-red-500 flex items-center justify-center text-xs font-medium text-white"
-              style={{ width: `${(poorCount / onlineNodes.length) * 100}%` }}
-            >
-              {poorCount > 2 && 'Poor'}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-          <span>{onlineNodes.length} online nodes analyzed</span>
-          <span>Updated every 30 seconds</span>
-        </div>
-      </div>
-
-      <div className="rounded-lg border-2 border-border p-4">
-        <div className="text-xs text-muted-foreground uppercase tracking-wider mb-4">
-          Latency Distribution
-        </div>
-        <div className="space-y-2">
-          {[
-            { label: '< 80ms', min: 0, max: 80, color: 'bg-green-500' },
-            { label: '80-120ms', min: 80, max: 120, color: 'bg-blue-500' },
-            { label: '120-200ms', min: 120, max: 200, color: 'bg-yellow-500' },
-            { label: '> 200ms', min: 200, max: Infinity, color: 'bg-red-500' },
-          ].map(({ label, min, max, color }) => {
-            const count = onlineNodes.filter(n =>
-              n.metrics.responseTimeMs >= min && n.metrics.responseTimeMs < max
-            ).length;
-            const percentage = onlineNodes.length > 0 ? (count / onlineNodes.length) * 100 : 0;
-
-            return (
-              <div key={label} className="flex items-center gap-3">
-                <div className="w-24 text-xs text-muted-foreground">{label}</div>
-                <div className="flex-1 h-4 bg-accent rounded overflow-hidden">
-                  <div
-                    className={cn('h-full rounded transition-all', color)}
-                    style={{ width: `${percentage}%` }}
-                  />
+      {/* Distribution Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <StatCard label="PERFORMANCE TIER DISTRIBUTION" icon={ZapIcon}>
+          <div className="md:mt-4">
+            <div className="h-8 rounded-full overflow-hidden flex bg-card/50">
+              {excellentCount > 0 && (
+                <div
+                  className="bg-green-500 flex items-center justify-center text-[10px] font-bold text-black uppercase"
+                  style={{ width: `${(excellentCount / onlineNodes.length) * 100}%` }}
+                >
+                  {excellentCount > 2 && 'Excellent'}
                 </div>
-                <div className="w-20 text-right text-xs font-mono">{count} nodes</div>
-              </div>
-            );
-          })}
-        </div>
+              )}
+              {goodCount > 0 && (
+                <div
+                  className="bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white uppercase"
+                  style={{ width: `${(goodCount / onlineNodes.length) * 100}%` }}
+                >
+                  {goodCount > 2 && 'Good'}
+                </div>
+              )}
+              {fairCount > 0 && (
+                <div
+                  className="bg-yellow-500 flex items-center justify-center text-[10px] font-bold text-black uppercase"
+                  style={{ width: `${(fairCount / onlineNodes.length) * 100}%` }}
+                >
+                  {fairCount > 2 && 'Fair'}
+                </div>
+              )}
+              {poorCount > 0 && (
+                <div
+                  className="bg-red-500 flex items-center justify-center text-[10px] font-bold text-white uppercase"
+                  style={{ width: `${(poorCount / onlineNodes.length) * 100}%` }}
+                >
+                  {poorCount > 2 && 'Poor'}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-between mt-3 text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+              <span>{onlineNodes.length} ONLINE NODES ANALYZED</span>
+              <span>UPDATED EVERY 30S</span>
+            </div>
+          </div>
+        </StatCard>
+
+        <StatCard label="LATENCY DISTRIBUTION" icon={TimerIcon}>
+          <div className="space-y-4 md:mt-4">
+            {[
+              { label: '< 80MS', min: 0, max: 80, color: 'bg-green-500' },
+              { label: '80-120MS', min: 80, max: 120, color: 'bg-blue-500' },
+              { label: '120-200MS', min: 120, max: 200, color: 'bg-yellow-500' },
+              { label: '> 200MS', min: 200, max: Infinity, color: 'bg-red-500' },
+            ].map(({ label, min, max, color }) => {
+              const count = onlineNodes.filter(n =>
+                n.metrics.responseTimeMs >= min && n.metrics.responseTimeMs < max
+              ).length;
+              const percentage = onlineNodes.length > 0 ? (count / onlineNodes.length) * 100 : 0;
+
+              return (
+                <div key={label} className="flex items-center gap-3">
+                  <div className="w-24 text-[10px] text-muted-foreground font-bold uppercase">{label}</div>
+                  <div className="flex-1 h-3 bg-card rounded overflow-hidden">
+                    <div
+                      className={cn('h-full rounded transition-all', color)}
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <div className="w-20 text-right text-[10px] font-mono text-muted-foreground">
+                    {count} NODES
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </StatCard>
       </div>
     </DashboardPageLayout>
   );

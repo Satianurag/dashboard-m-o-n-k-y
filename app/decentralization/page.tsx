@@ -76,68 +76,7 @@ function LoadingState() {
 
 const COLORS = ['#00ff88', '#22c55e', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4'];
 
-// Reusable StatCard that mimics DashboardStat exactly
-interface StatCardProps {
-  label: string;
-  value?: string | number;
-  description?: string;
-  icon: React.ElementType;
-  intent?: "positive" | "negative" | "neutral";
-  children?: React.ReactNode;
-  className?: string;
-  contentClassName?: string;
-}
-
-function StatCard({
-  label,
-  value,
-  description,
-  icon: Icon,
-  intent = "neutral",
-  children,
-  className,
-  contentClassName
-}: StatCardProps) {
-  const bulletVariant = intent === "positive" ? "success" : intent === "negative" ? "destructive" : "default";
-
-  const numericValue = value !== undefined && typeof value === 'number' ? value :
-    (value !== undefined ? parseFloat(value.toString().replace(/[^0-9.-]/g, '')) : NaN);
-  const isNumeric = !isNaN(numericValue);
-  const suffix = value !== undefined && typeof value === 'string' ? value.replace(/[0-9.-]/g, '') : '';
-
-  return (
-    <Card className={cn("relative overflow-hidden flex flex-col", className)}>
-      <CardHeader className="flex items-center justify-between">
-        <CardTitle className="flex items-center gap-2.5">
-          <Bullet variant={bulletVariant} />
-          {label}
-        </CardTitle>
-        <Icon className="size-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent className={cn("bg-accent flex-1 pt-2 md:pt-6 overflow-clip relative", contentClassName)}>
-        {value !== undefined && (
-          <div className="flex items-center">
-            <span className="text-4xl md:text-5xl font-display">
-              {isNumeric ? (
-                <NumberFlow value={numericValue} suffix={suffix} />
-              ) : (
-                value
-              )}
-            </span>
-          </div>
-        )}
-        {description && (
-          <div className="justify-between">
-            <p className="text-xs md:text-sm font-medium text-muted-foreground tracking-wide uppercase">
-              {description}
-            </p>
-          </div>
-        )}
-        {children && <div className={cn(value !== undefined || description ? "mt-4" : "")}>{children}</div>}
-      </CardContent>
-    </Card>
-  );
-}
+import { StatCard } from "@/components/dashboard/stat-card";
 
 export default function DecentralizationPage() {
   const { data: metrics, isLoading: metricsLoading } = useDecentralizationMetrics();
@@ -155,19 +94,19 @@ export default function DecentralizationPage() {
     );
   }
 
-  const countryData = metrics?.countryDistribution.slice(0, 8).map((c, i) => ({
+  const countryData = metrics?.countryDistribution.slice(0, 8).map((c: any, i: number) => ({
     name: c.country,
     value: c.count,
     color: COLORS[i % COLORS.length],
   })) || [];
 
-  const datacenterData = metrics?.datacenterDistribution.slice(0, 10).map(d => ({
+  const datacenterData = metrics?.datacenterDistribution.slice(0, 10).map((d: any) => ({
     name: d.datacenter.length > 12 ? d.datacenter.slice(0, 12) + '...' : d.datacenter,
     count: d.count,
     percentage: d.percentage,
   })) || [];
 
-  const asnData = metrics?.asnDistribution.slice(0, 8).map(a => ({
+  const asnData = metrics?.asnDistribution.slice(0, 8).map((a: any) => ({
     name: a.provider,
     count: a.count,
     percentage: a.percentage,
@@ -233,7 +172,7 @@ export default function DecentralizationPage() {
                     innerRadius={50}
                     outerRadius={90}
                   >
-                    {countryData.map((entry, index) => (
+                    {countryData.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -249,7 +188,7 @@ export default function DecentralizationPage() {
               </ResponsiveContainer>
             </div>
             <div className="w-1/2 space-y-1 pl-4">
-              {countryData.map((c) => (
+              {countryData.map((c: any) => (
                 <div key={c.name} className="flex items-center gap-2 text-xs">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.color }} />
                   <span className="flex-1 truncate">{c.name}</span>
@@ -292,7 +231,7 @@ export default function DecentralizationPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <StatCard label="DATACENTER CONCENTRATION" icon={ServerIcon} className="lg:col-span-2">
           <div className="space-y-4">
-            {datacenterData.map((dc) => (
+            {datacenterData.map((dc: any) => (
               <div key={dc.name} className="flex items-center gap-3">
                 <div className="w-32 text-xs text-muted-foreground truncate" title={dc.name}>{dc.name}</div>
                 <div className="flex-1 h-3 bg-card rounded overflow-hidden">
@@ -376,9 +315,9 @@ export default function DecentralizationPage() {
           <StatCard label="SUPERMINORITY DETAILS" icon={UsersIcon} description="TOP STAKEHOLDERS">
             <div className="space-y-3">
               <div className="text-xs text-muted-foreground mb-4 font-medium italic">
-                These {superminority.count} entities collectively control {superminority.nodes.reduce((acc, n) => acc + n.percentage, 0).toFixed(1)}% of total network stake.
+                These {superminority.count} entities collectively control {superminority.nodes.reduce((acc: number, n: any) => acc + n.percentage, 0).toFixed(1)}% of total network stake.
               </div>
-              {superminority.nodes.slice(0, 5).map((node, i) => (
+              {superminority.nodes.slice(0, 5).map((node: any, i: number) => (
                 <div key={node.pubkey} className="flex items-center gap-3 text-xs p-2 bg-card/30 rounded border border-border/20">
                   <span className="font-display text-primary w-8">#{i + 1}</span>
                   <span className="font-mono flex-1 text-muted-foreground">{node.pubkey.slice(0, 24)}...</span>

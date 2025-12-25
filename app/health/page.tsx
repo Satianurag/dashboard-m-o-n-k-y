@@ -3,6 +3,10 @@
 import DashboardPageLayout from "@/components/dashboard/layout";
 import { useHealthScoreBreakdown, usePNodes, useNetworkStats, useSlashingEvents, usePeerRankings } from "@/hooks/use-pnode-data-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Bullet } from "@/components/ui/bullet";
+import { cn } from "@/lib/utils";
+import NumberFlow from "@number-flow/react";
 import {
   ResponsiveContainer,
   RadarChart,
@@ -18,6 +22,12 @@ import {
   Tooltip,
 } from 'recharts';
 
+// Icons
+import TrophyIcon from "@/components/icons/trophy";
+import ServerIcon from "@/components/icons/server";
+import GlobeIcon from "@/components/icons/globe";
+import BoomIcon from "@/components/icons/boom";
+
 const HeartPulseIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
@@ -25,16 +35,33 @@ const HeartPulseIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const ActivityIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+  </svg>
+);
+
+const ShieldIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
 function LoadingState() {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-40 rounded-lg" />)}
       </div>
-      <Skeleton className="h-80 rounded-lg" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Skeleton className="h-80 rounded-lg" />
+        <Skeleton className="h-80 rounded-lg" />
+      </div>
     </div>
   );
 }
+
+import { StatCard } from "@/components/dashboard/stat-card";
 
 export default function HealthScorePage() {
   const { data: healthBreakdown, isLoading: healthLoading } = useHealthScoreBreakdown();
@@ -55,15 +82,15 @@ export default function HealthScorePage() {
 
   const overallScore = healthBreakdown?.overall || 0;
   const scoreGrade = overallScore >= 90 ? 'A+' : overallScore >= 80 ? 'A' : overallScore >= 70 ? 'B' : overallScore >= 60 ? 'C' : 'D';
-  const scoreColor = overallScore >= 80 ? 'text-green-400' : overallScore >= 60 ? 'text-yellow-400' : 'text-red-400';
+  const scoreIntent = overallScore >= 80 ? 'positive' : overallScore >= 60 ? 'neutral' : 'negative';
 
-  const radarData = healthBreakdown?.factors.map(f => ({
+  const radarData = healthBreakdown?.factors.map((f: any) => ({
     factor: f.name,
     score: f.score,
     fullMark: 100,
   })) || [];
 
-  const factorData = healthBreakdown?.factors.map(f => ({
+  const factorData = healthBreakdown?.factors.map((f: any) => ({
     name: f.name,
     score: f.score,
     weight: f.weight * 100,
@@ -78,67 +105,53 @@ export default function HealthScorePage() {
         icon: HeartPulseIcon,
       }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="rounded-lg border-2 border-primary/50 bg-primary/5 p-6 text-center">
-          <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Overall Network Health</div>
-          <div className="text-7xl font-display text-primary mb-2">{overallScore.toFixed(0)}</div>
-          <div className={`text-3xl font-display ${scoreColor}`}>{scoreGrade}</div>
-          <div className="text-xs text-muted-foreground mt-2">Composite score based on 6 factors</div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <StatCard
+          label="OVERALL HEALTH"
+          value={overallScore.toFixed(0)}
+          description={`GRADE: ${scoreGrade}`}
+          icon={HeartPulseIcon}
+          intent={scoreIntent}
+        />
 
-        <div className="rounded-lg border-2 border-border p-6">
-          <div className="text-xs text-muted-foreground uppercase tracking-wider mb-4">Quick Stats</div>
+        <StatCard label="QUICK STATS" icon={ActivityIcon}>
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Total Nodes</span>
-              <span className="font-mono text-primary">{nodes?.length || 0}</span>
+            <div className="flex justify-between items-center text-xs uppercase tracking-tight">
+              <span className="text-muted-foreground">Online Rate</span>
+              <span className="font-mono text-green-400 font-bold">{stats?.networkHealth.toFixed(1)}%</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Online Rate</span>
-              <span className="font-mono text-green-400">{stats?.networkHealth.toFixed(1)}%</span>
+            <div className="flex justify-between items-center text-xs uppercase tracking-tight">
+              <span className="text-muted-foreground">Avg Uptime</span>
+              <span className="font-mono font-bold">{stats?.averageUptime.toFixed(1)}%</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Avg Uptime</span>
-              <span className="font-mono">{stats?.averageUptime.toFixed(1)}%</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Avg Latency</span>
-              <span className="font-mono">{stats?.averageResponseTime.toFixed(0)}ms</span>
+            <div className="flex justify-between items-center text-xs uppercase tracking-tight">
+              <span className="text-muted-foreground">Avg Latency</span>
+              <span className="font-mono font-bold text-primary">{stats?.averageResponseTime.toFixed(0)}MS</span>
             </div>
           </div>
-        </div>
+        </StatCard>
 
-        <div className="rounded-lg border-2 border-border p-6">
-          <div className="text-xs text-muted-foreground uppercase tracking-wider mb-4">Score History</div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">24h Change</span>
-              <span className="font-mono text-green-400">+0.3%</span>
+        <StatCard label="SCORE TRENDS" icon={ActivityIcon}>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-xs uppercase tracking-tight">
+              <span className="text-muted-foreground">24h Change</span>
+              <span className="font-mono text-green-400 font-bold">+0.3%</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">7d Change</span>
-              <span className="font-mono text-green-400">+1.2%</span>
+            <div className="flex justify-between items-center text-xs uppercase tracking-tight">
+              <span className="text-muted-foreground">7d Change</span>
+              <span className="font-mono text-green-400 font-bold">+1.2%</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">30d Change</span>
-              <span className="font-mono text-green-400">+2.8%</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">All-time High</span>
-              <span className="font-mono">{Math.max(overallScore + 2, 95).toFixed(0)}</span>
+            <div className="flex justify-between items-center text-xs uppercase tracking-tight">
+              <span className="text-muted-foreground">All-time High</span>
+              <span className="font-mono font-bold">{Math.max(overallScore + 2, 95).toFixed(0)}</span>
             </div>
           </div>
-        </div>
+        </StatCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-lg border-2 border-border overflow-hidden">
-          <div className="px-4 py-2 border-b border-border bg-accent/20">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">
-              Health Factor Radar
-            </span>
-          </div>
-          <div className="p-4 h-[350px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <StatCard label="HEALTH FACTOR RADAR" icon={GlobeIcon}>
+          <div className="h-[350px] md:mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
                 <PolarGrid stroke="hsl(var(--border))" />
@@ -162,15 +175,10 @@ export default function HealthScorePage() {
               </RadarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </StatCard>
 
-        <div className="rounded-lg border-2 border-border overflow-hidden">
-          <div className="px-4 py-2 border-b border-border bg-accent/20">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">
-              Factor Breakdown
-            </span>
-          </div>
-          <div className="p-4 h-[350px]">
+        <StatCard label="FACTOR BREAKDOWN" icon={TrophyIcon}>
+          <div className="h-[350px] md:mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={factorData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
@@ -188,7 +196,7 @@ export default function HealthScorePage() {
                     borderRadius: '8px',
                     fontSize: '12px',
                   }}
-                  formatter={(value, name) => [
+                  formatter={(value: any, name: any) => [
                     `${Number(value).toFixed(1)}${name === 'weight' ? '%' : ''}`,
                     name === 'score' ? 'Score' : name === 'weight' ? 'Weight' : 'Weighted'
                   ]}
@@ -197,127 +205,95 @@ export default function HealthScorePage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </StatCard>
       </div>
 
-      <div className="rounded-lg border-2 border-border overflow-hidden">
-        <div className="px-4 py-2 border-b border-border bg-accent/20">
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Scoring Methodology (Similar to Stakewiz Wiz Score)
-          </span>
-        </div>
-        <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {healthBreakdown?.factors.map((factor) => (
-              <div key={factor.name} className="p-4 bg-accent/20 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">{factor.name}</span>
-                  <span className="text-xs text-muted-foreground">{(factor.weight * 100).toFixed(0)}% weight</span>
-                </div>
-                <div className="h-2 bg-accent rounded-full overflow-hidden mb-2">
-                  <div
-                    className={`h-full rounded-full ${factor.score >= 80 ? 'bg-green-500' : factor.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                    style={{ width: `${factor.score}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Score: {factor.score.toFixed(1)}</span>
-                  <span className="font-mono text-primary">+{factor.weightedScore.toFixed(1)}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">{factor.description}</p>
+      <StatCard label="SCORING METHODOLOGY" icon={ShieldIcon} description="SIMILAR TO STAKEWIZ WIZ SCORE" className="mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:mt-4">
+          {healthBreakdown?.factors.map((factor: any) => (
+            <div key={factor.name} className="p-4 bg-card/40 rounded border border-border/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider">{factor.name}</span>
+                <span className="text-[10px] text-muted-foreground uppercase">{(factor.weight * 100).toFixed(0)}% WEIGHT</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-lg border-2 border-border p-4">
-        <div className="text-xs text-muted-foreground uppercase tracking-wider mb-4">
-          Score Interpretation
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {[
-            { grade: 'A+', range: '90-100', desc: 'Exceptional', color: 'bg-green-500' },
-            { grade: 'A', range: '80-89', desc: 'Excellent', color: 'bg-green-400' },
-            { grade: 'B', range: '70-79', desc: 'Good', color: 'bg-blue-500' },
-            { grade: 'C', range: '60-69', desc: 'Fair', color: 'bg-yellow-500' },
-            { grade: 'D', range: '<60', desc: 'Needs Work', color: 'bg-red-500' },
-          ].map((g) => (
-            <div key={g.grade} className="p-3 bg-accent/20 rounded-lg text-center">
-              <div className={`w-8 h-8 ${g.color} rounded-full flex items-center justify-center mx-auto mb-2`}>
-                <span className="text-white font-bold text-sm">{g.grade}</span>
+              <div className="h-2 bg-card rounded-full overflow-hidden mb-3">
+                <div
+                  className={`h-full rounded-full ${factor.score >= 80 ? 'bg-green-500' : factor.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                  style={{ width: `${factor.score}%` }}
+                />
               </div>
-              <div className="text-xs font-mono">{g.range}</div>
-              <div className="text-xs text-muted-foreground">{g.desc}</div>
+              <div className="flex justify-between text-[10px] uppercase font-bold tracking-tight">
+                <span className="text-muted-foreground">Score: {factor.score.toFixed(1)}</span>
+                <span className="text-primary">+{factor.weightedScore.toFixed(1)}</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2 italic leading-relaxed">{factor.description}</p>
             </div>
           ))}
         </div>
-      </div>
+      </StatCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-lg border-2 border-border overflow-hidden">
-          <div className="px-4 py-2 border-b border-border bg-accent/20">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider">
-              Peer Rankings (Top 10)
-            </span>
-          </div>
-          <div className="divide-y divide-border">
-            {peerRankings?.slice(0, 10).map((peer) => (
-              <div key={peer.nodeId} className="px-4 py-3 flex items-center gap-4 hover:bg-accent/10">
-                <span className={`text-lg font-display w-8 ${peer.rank <= 3 ? 'text-yellow-400' : 'text-primary'
-                  }`}>#{peer.rank}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <StatCard label="PEER RANKINGS (TOP 10)" icon={TrophyIcon}>
+          <div className="divide-y divide-border/20 -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4">
+            {peerRankings?.slice(0, 10).map((peer: any, i: number) => (
+              <div key={peer.nodeId} className="px-4 py-3 flex items-center gap-4 hover:bg-card/30 transition-colors">
+                <span className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center font-display text-lg",
+                  peer.rank <= 3 ? "bg-primary/20 text-primary" : "bg-card text-muted-foreground"
+                )}>
+                  {peer.rank}
+                </span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-mono text-sm truncate">{peer.nodePubkey.slice(0, 16)}...</div>
-                  <div className="text-xs text-muted-foreground">
-                    Top {peer.percentile.toFixed(0)}% percentile
+                  <div className="font-mono text-sm truncate uppercase">{peer.nodePubkey.slice(0, 16)}...</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-tight">
+                    Top {peer.percentile.toFixed(0)}% Percentile
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-primary">{peer.xScore.toFixed(1)}</div>
-                  <div className={`text-xs ${peer.trend === 'up' ? 'text-green-400' : peer.trend === 'down' ? 'text-red-400' : 'text-muted-foreground'
-                    }`}>
+                  <div className="font-mono text-lg text-primary">{peer.xScore.toFixed(1)}</div>
+                  <div className={cn(
+                    "text-[10px] font-bold uppercase",
+                    peer.trend === 'up' ? 'text-green-400' : peer.trend === 'down' ? 'text-red-400' : 'text-muted-foreground'
+                  )}>
                     {peer.trend === 'up' ? '↑' : peer.trend === 'down' ? '↓' : '→'} {Math.abs(peer.trendChange).toFixed(1)}%
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </StatCard>
 
-        <div className="rounded-lg border-2 border-border overflow-hidden">
-          <div className="px-4 py-2 border-b border-border bg-red-500/20">
-            <span className="text-xs text-red-400 uppercase tracking-wider">
-              Recent Slashing Events
-            </span>
-          </div>
-          <div className="divide-y divide-border">
+        <StatCard label="RECENT SLASHING EVENTS" icon={ShieldIcon} intent="negative">
+          <div className="divide-y divide-border/20 -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4">
             {slashingEvents?.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <div className="text-3xl mb-2">✓</div>
-                <p>No slashing events recorded</p>
+              <div className="p-12 text-center text-muted-foreground">
+                <div className="text-4xl mb-3 opacity-20">✓</div>
+                <p className="text-xs uppercase tracking-widest font-medium">No slashing events recorded</p>
               </div>
             ) : (
-              slashingEvents?.map((event) => (
-                <div key={event.id} className="px-4 py-3 hover:bg-accent/10">
+              slashingEvents?.map((event: any) => (
+                <div key={event.id} className="px-4 py-3 hover:bg-card/30 transition-colors">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm truncate flex-1">{event.nodePubkey.slice(0, 16)}...</span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${event.type === 'double_sign' ? 'bg-red-500/20 text-red-400' :
-                      event.type === 'offline' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-orange-500/20 text-orange-400'
-                      }`}>
-                      {event.type.replace('_', ' ').toUpperCase()}
+                    <span className="font-mono text-sm truncate flex-1 uppercase">{event.nodePubkey.slice(0, 16)}...</span>
+                    <span className={cn(
+                      "text-[10px] font-bold px-2 py-0.5 rounded uppercase",
+                      event.type === 'double_sign' ? 'bg-red-500/20 text-red-500' :
+                        event.type === 'offline' ? 'bg-yellow-500/20 text-yellow-500' :
+                          'bg-orange-500/20 text-orange-500'
+                    )}>
+                      {event.type.replace('_', ' ')}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground uppercase font-medium">
                     <span>Epoch {event.epoch}</span>
-                    <span className="text-red-400">-{event.amount} XAND</span>
+                    <span className="text-red-500">-{event.amount} XAND</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">{event.details}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 truncate lowercase italic opacity-80">{event.details}</p>
                 </div>
               ))
             )}
           </div>
-        </div>
+        </StatCard>
       </div>
     </DashboardPageLayout>
   );

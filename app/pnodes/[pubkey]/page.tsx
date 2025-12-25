@@ -101,29 +101,7 @@ function StatusBadge({ status }: { status: PNode['status'] }) {
     );
 }
 
-function StatCard({
-    label,
-    value,
-    icon: Icon,
-    color = 'text-primary',
-    tooltip
-}: {
-    label: string;
-    value: string | number;
-    icon: React.ComponentType<{ className?: string }>;
-    color?: string;
-    tooltip?: string;
-}) {
-    return (
-        <div className="p-4 rounded-lg border-2 border-border bg-card" title={tooltip}>
-            <div className="flex items-center gap-2 mb-2">
-                <Icon className={`w-4 h-4 ${color}`} aria-hidden="true" />
-                <span className="text-xs text-muted-foreground uppercase tracking-wider">{label}</span>
-            </div>
-            <div className={`text-2xl font-display ${color}`}>{value}</div>
-        </div>
-    );
-}
+import { StatCard } from "@/components/dashboard/stat-card";
 
 export default function NodeDetailPage({ params }: PageProps) {
     const { pubkey } = use(params);
@@ -244,8 +222,8 @@ export default function NodeDetailPage({ params }: PageProps) {
             </div>
 
             {/* Node Header */}
-            <div className="rounded-lg border-2 border-border p-6 mb-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <StatCard label="NODE OVERVIEW" icon={ServerIcon} className="mb-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:mt-2">
                     <div className="space-y-2">
                         <div className="flex items-center gap-3">
                             <StatusBadge status={node.status} />
@@ -255,16 +233,16 @@ export default function NodeDetailPage({ params }: PageProps) {
                                 </span>
                             )}
                         </div>
-                        <div className="font-mono text-sm break-all text-muted-foreground">
+                        <div className="font-mono text-xs break-all text-muted-foreground opacity-80">
                             {node.pubkey}
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-6">
                         <div className="text-center">
-                            <div className="text-4xl font-display text-primary">{node.performance.score.toFixed(1)}</div>
-                            <div className="text-xs text-muted-foreground uppercase">Score</div>
+                            <div className="text-5xl font-display text-primary">{node.performance.score.toFixed(1)}</div>
+                            <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Global Score</div>
                         </div>
-                        <div className={`px-3 py-1 rounded text-sm uppercase font-bold ${node.performance.tier === 'excellent' ? 'bg-green-500/20 text-green-400' :
+                        <div className={`px-4 py-1.5 rounded text-[10px] uppercase font-black tracking-tighter ${node.performance.tier === 'excellent' ? 'bg-green-500/20 text-green-400' :
                             node.performance.tier === 'good' ? 'bg-blue-500/20 text-blue-400' :
                                 node.performance.tier === 'fair' ? 'bg-yellow-500/20 text-yellow-400' :
                                     'bg-red-500/20 text-red-400'
@@ -273,165 +251,141 @@ export default function NodeDetailPage({ params }: PageProps) {
                         </div>
                     </div>
                 </div>
-            </div>
+            </StatCard>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
                 <StatCard
-                    label="Latency"
-                    value={`${node.metrics.responseTimeMs.toFixed(0)}ms`}
+                    label="LATENCY"
+                    value={`${node.metrics.responseTimeMs.toFixed(0)}MS`}
                     icon={Activity}
-                    color="text-blue-400"
-                    tooltip="Average network response time"
+                    intent="neutral"
                 />
                 <StatCard
-                    label="Peers"
+                    label="PEERS"
                     value={node.gossip.peersConnected}
                     icon={Users}
-                    color="text-purple-400"
-                    tooltip="Number of connected gossip peers"
+                    intent="neutral"
                 />
                 <StatCard
-                    label="Credits"
+                    label="CREDITS"
                     value={node.credits?.toLocaleString() || 'N/A'}
                     icon={TrendingUp}
-                    color="text-cyan-400"
-                    tooltip="Pod credits score - a measure of node reliability"
+                    intent="neutral"
                 />
                 <StatCard
-                    label="Storage"
+                    label="STORAGE"
                     value={`${(node.metrics.storageCapacityGB / 1000).toFixed(1)}TB`}
                     icon={HardDrive}
-                    color="text-yellow-400"
-                    tooltip="Total storage capacity"
+                    intent="neutral"
                 />
                 <StatCard
-                    label="Used"
+                    label="USED"
                     value={`${(node.metrics.storageUsedGB / 1000).toFixed(2)}TB`}
                     icon={HardDrive}
-                    color="text-orange-400"
-                    tooltip="Current storage usage"
+                    intent="neutral"
                 />
                 <StatCard
                     label="CPU"
                     value={`${node.metrics.cpuPercent.toFixed(0)}%`}
                     icon={Cpu}
-                    color="text-pink-400"
-                    tooltip="Current CPU utilization"
+                    intent="neutral"
                 />
                 <StatCard
-                    label="Memory"
+                    label="MEMORY"
                     value={`${node.metrics.memoryPercent.toFixed(0)}%`}
                     icon={Gauge}
-                    color="text-indigo-400"
-                    tooltip="Current memory utilization"
+                    intent="neutral"
                 />
             </div>
 
             {/* Location & Network Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="rounded-lg border-2 border-border p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                        <MapPin className="w-4 h-4 text-primary" />
-                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Location</span>
-                    </div>
-                    <div className="space-y-2">
-                        <div className="flex justify-between">
+                <StatCard label="GEOGRAPHIC DATA" icon={MapPin}>
+                    <div className="space-y-3 md:mt-4">
+                        <div className="flex justify-between items-center text-xs uppercase tracking-tight">
                             <span className="text-muted-foreground">City</span>
-                            <span className="font-mono">{node.location?.city || 'Unknown'}</span>
+                            <span className="font-mono font-bold">{node.location?.city || 'Unknown'}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center text-xs uppercase tracking-tight">
                             <span className="text-muted-foreground">Country</span>
-                            <span className="font-mono">{node.location?.country || 'Unknown'}</span>
+                            <span className="font-mono font-bold">{node.location?.country || 'Unknown'}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center text-xs uppercase tracking-tight">
                             <span className="text-muted-foreground">Datacenter</span>
-                            <span className="font-mono text-sm">{node.location?.datacenter || 'Unknown'}</span>
+                            <span className="font-mono text-[10px] font-bold opacity-80">{node.location?.datacenter || 'Unknown'}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center text-xs uppercase tracking-tight">
                             <span className="text-muted-foreground">ASN</span>
-                            <span className="font-mono">{node.location?.asn || 'Unknown'}</span>
+                            <span className="font-mono font-bold">{node.location?.asn || 'Unknown'}</span>
                         </div>
                     </div>
-                </div>
+                </StatCard>
 
-                <div className="rounded-lg border-2 border-border p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                        <Server className="w-4 h-4 text-primary" />
-                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Network</span>
-                    </div>
-                    <div className="space-y-2">
-                        <div className="flex justify-between">
+                <StatCard label="NETWORK CONNECTION" icon={Server}>
+                    <div className="space-y-3 md:mt-4">
+                        <div className="flex justify-between items-center text-xs uppercase tracking-tight">
                             <span className="text-muted-foreground">IP Address</span>
-                            <span className="font-mono">{node.ip}</span>
+                            <span className="font-mono font-bold text-primary">{node.ip}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center text-xs uppercase tracking-tight">
                             <span className="text-muted-foreground">Port</span>
-                            <span className="font-mono">{node.port}</span>
+                            <span className="font-mono font-bold">{node.port}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center text-xs uppercase tracking-tight">
                             <span className="text-muted-foreground">Version</span>
-                            <span className="font-mono">{node.version}</span>
+                            <span className="font-mono font-bold">{node.version}</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center text-xs uppercase tracking-tight">
                             <span className="text-muted-foreground">Last Seen</span>
-                            <span className="font-mono text-sm">{new Date(node.lastSeen).toLocaleString()}</span>
+                            <span className="font-mono text-[10px] font-bold opacity-80">{new Date(node.lastSeen).toLocaleString()}</span>
                         </div>
                     </div>
-                </div>
+                </StatCard>
             </div>
 
             {/* Node Location Map */}
-            <div className="rounded-lg border-2 border-border overflow-hidden mb-6">
-                <div className="px-4 py-2 border-b border-border bg-accent/20">
-                    <span className="text-xs text-muted-foreground uppercase tracking-wider">Node Location</span>
-                </div>
-                <div className="h-[300px]">
+            <StatCard label="NODE GEOLOCATION" icon={MapPin} className="mb-6">
+                <div className="h-[300px] -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4">
                     <SingleNodeMap node={node} />
                 </div>
-            </div>
+            </StatCard>
 
             {/* Staking Info */}
             {node.staking && (
-                <div className="rounded-lg border-2 border-border p-4 mb-6">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-4">Staking Information</div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                            <div className="text-muted-foreground text-sm">Commission</div>
-                            <div className="text-xl font-display">{node.staking.commission}%</div>
+                <StatCard label="STAKING INFORMATION" icon={TrendingUp} className="mb-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/20 -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4 overflow-hidden rounded-b-lg">
+                        <div className="bg-card/40 p-4">
+                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Commission</p>
+                            <div className="text-2xl font-display">{node.staking.commission}%</div>
                         </div>
-                        <div>
-                            <div className="text-muted-foreground text-sm">APY</div>
-                            <div className="text-xl font-display text-green-400">{node.staking.apy.toFixed(2)}%</div>
+                        <div className="bg-card/40 p-4">
+                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">APY</p>
+                            <div className="text-2xl font-display text-green-400">{node.staking.apy.toFixed(2)}%</div>
                         </div>
-                        <div>
-                            <div className="text-muted-foreground text-sm">Delegated Stake</div>
-                            <div className="text-xl font-display">{(node.staking.delegatedStake / 1e9).toFixed(2)} SOL</div>
+                        <div className="bg-card/40 p-4">
+                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Delegated</p>
+                            <div className="text-2xl font-display">{(node.staking.delegatedStake / 1e9).toFixed(1)} SOL</div>
                         </div>
-                        <div>
-                            <div className="text-muted-foreground text-sm">Activated Stake</div>
-                            <div className="text-xl font-display">{(node.staking.activatedStake / 1e9).toFixed(2)} SOL</div>
+                        <div className="bg-card/40 p-4">
+                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Activated</p>
+                            <div className="text-2xl font-display">{(node.staking.activatedStake / 1e9).toFixed(1)} SOL</div>
                         </div>
                     </div>
-                </div>
+                </StatCard>
             )}
 
             {/* Performance Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-
-                <div className="rounded-lg border-2 border-border overflow-hidden">
-                    <div className="px-4 py-2 border-b border-border bg-accent/20">
-                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Latency History (30d)</span>
-                    </div>
-                    <div className="p-4 h-[200px]">
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
+                <StatCard label="LATENCY HISTORY (30D)" icon={Activity}>
+                    <div className="h-[250px] md:mt-4 -mx-2">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={latencyChartData}>
                                 <defs>
                                     <linearGradient id="latencyGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
@@ -448,40 +402,39 @@ export default function NodeDetailPage({ params }: PageProps) {
                                 <Area
                                     type="monotone"
                                     dataKey="latency"
-                                    stroke="#3b82f6"
+                                    stroke="hsl(var(--primary))"
                                     fill="url(#latencyGradient)"
-                                    strokeWidth={2}
+                                    strokeWidth={3}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
+                </StatCard>
             </div>
 
             {/* Gossip Stats */}
-            <div className="rounded-lg border-2 border-border p-4 mt-6">
-                <div className="text-xs text-muted-foreground uppercase tracking-wider mb-4">Gossip Protocol Statistics</div>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                        <div className="text-muted-foreground text-sm">Messages Received</div>
+            <StatCard label="GOSSIP PROTOCOL STATISTICS" icon={Activity} className="mt-6">
+                <div className="grid grid-cols-3 gap-px bg-border/20 -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4 overflow-hidden rounded-b-lg">
+                    <div className="bg-card/40 p-4">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Messages In</p>
                         <div className="text-2xl font-display text-purple-400">
                             {(node.gossip.messagesReceived / 1000).toFixed(1)}K
                         </div>
                     </div>
-                    <div>
-                        <div className="text-muted-foreground text-sm">Messages Sent</div>
+                    <div className="bg-card/40 p-4">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Messages Out</p>
                         <div className="text-2xl font-display text-cyan-400">
                             {(node.gossip.messagesSent / 1000).toFixed(1)}K
                         </div>
                     </div>
-                    <div>
-                        <div className="text-muted-foreground text-sm">Connected Peers</div>
+                    <div className="bg-card/40 p-4">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Peers Active</p>
                         <div className="text-2xl font-display text-green-400">
                             {node.gossip.peersConnected}
                         </div>
                     </div>
                 </div>
-            </div>
+            </StatCard>
         </DashboardPageLayout>
     );
 }

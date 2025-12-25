@@ -6,18 +6,34 @@ import { usePNodes, useGossipHealth, useStorageDistribution } from "@/hooks/use-
 import { LeafletMap } from "@/components/dashboard/leaflet-map";
 import { GossipHealthPanel, StorageDistributionPanel } from "@/components/dashboard/gossip-health";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Bullet } from "@/components/ui/bullet";
+import { cn } from "@/lib/utils";
+import NumberFlow from "@number-flow/react";
+
+// Icons
+import ServerIcon from "@/components/icons/server";
+import ActivityIcon from "@/components/icons/gear"; // Using gear as activity/gossip
+
+const NetworkIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 2v8M12 14v8M2 12h8M14 12h8" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
 
 function LoadingState() {
   return (
     <div className="space-y-6">
-      <Skeleton className="h-[350px] rounded-lg" />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Skeleton className="h-64 rounded-lg" />
-        <Skeleton className="h-64 rounded-lg" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
       </div>
+      <Skeleton className="h-[400px] rounded-lg" />
     </div>
   );
 }
+
+import { StatCard } from "@/components/dashboard/stat-card";
 
 export default function NetworkPage() {
   const { data: nodes, isLoading: nodesLoading, dataUpdatedAt } = usePNodes();
@@ -34,11 +50,11 @@ export default function NetworkPage() {
     );
   }
 
-  const onlineNodes = nodes?.filter(n => n.status === 'online') || [];
-  const totalMessages = nodes?.reduce((acc, n) => acc + n.gossip.messagesReceived + n.gossip.messagesSent, 0) || 0;
-  const avgPeers = onlineNodes.length > 0
-    ? onlineNodes.reduce((acc, n) => acc + n.gossip.peersConnected, 0) / onlineNodes.length
-    : 0;
+  const onlineNodesCount = nodes?.filter((n: any) => n.status === 'online').length || 0;
+  const avgPeers = nodes?.length ? nodes.reduce((acc: number, n: any) => acc + (n.peers?.length || 0), 0) / nodes.length : 0;
+
+  const totalMessages = nodes?.reduce((acc: number, n: any) => acc + (n.gossip?.messagesReceived || 0) + (n.gossip?.messagesSent || 0), 0) || 0;
+  const networkLatency = nodes?.length ? nodes.reduce((acc: number, n: any) => acc + (n.latency || 0), 0) / nodes.length : 0;
 
   return (
     <DashboardPageLayout
@@ -48,184 +64,111 @@ export default function NetworkPage() {
         icon: GlobeIcon,
       }}
     >
-      <div className="rounded-lg border-2 border-border overflow-hidden mb-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4">
-          {/* Active Nodes */}
-          <div className="border-r border-b lg:border-b-0 border-border">
-            <div className="flex items-center justify-between p-3 border-b border-border">
-              <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                <span className="size-2 rounded-full bg-green-500" />
-                Active Nodes
-              </div>
-            </div>
-            <div className="bg-accent p-3">
-              <div className="text-3xl font-display text-green-400">{onlineNodes.length}</div>
-              <p className="text-xs font-medium text-muted-foreground tracking-wide">of {nodes?.length || 0} total</p>
-            </div>
-          </div>
-
-          {/* Avg Peers */}
-          <div className="border-b lg:border-b-0 lg:border-r border-border">
-            <div className="flex items-center justify-between p-3 border-b border-border">
-              <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                <span className="size-2 rounded-full bg-primary" />
-                Avg Peers
-              </div>
-            </div>
-            <div className="bg-accent p-3">
-              <div className="text-3xl font-display">{avgPeers.toFixed(1)}</div>
-              <p className="text-xs font-medium text-muted-foreground tracking-wide">connections per node</p>
-            </div>
-          </div>
-
-          {/* Message Rate */}
-          <div className="border-r border-border">
-            <div className="flex items-center justify-between p-3 border-b border-border">
-              <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                <span className="size-2 rounded-full bg-primary" />
-                Message Rate
-              </div>
-            </div>
-            <div className="bg-accent p-3">
-              <div className="text-3xl font-display">{gossipHealth?.messageRate.toLocaleString()}</div>
-              <p className="text-xs font-medium text-muted-foreground tracking-wide">msgs/sec</p>
-            </div>
-          </div>
-
-          {/* Network Latency */}
-          <div>
-            <div className="flex items-center justify-between p-3 border-b border-border">
-              <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                <span className="size-2 rounded-full bg-primary" />
-                Network Latency
-              </div>
-            </div>
-            <div className="bg-accent p-3">
-              <div className="text-3xl font-display">{gossipHealth?.networkLatency.toFixed(0)}ms</div>
-              <p className="text-xs font-medium text-muted-foreground tracking-wide">avg propagation</p>
-            </div>
-          </div>
-        </div>
+      {/* Top metrics grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <StatCard
+          label="ACTIVE NODES"
+          value={onlineNodesCount}
+          description={`OF ${nodes?.length || 0} TOTAL`}
+          icon={ServerIcon}
+          intent="positive"
+        />
+        <StatCard
+          label="AVG PEERS"
+          value={avgPeers.toFixed(1)}
+          description="CONNECTIONS PER NODE"
+          icon={NetworkIcon}
+          intent="positive"
+        />
+        <StatCard
+          label="MESSAGE RATE"
+          value={gossipHealth?.messageRate || 0}
+          description="MSGS / SEC"
+          icon={ActivityIcon}
+          intent="neutral"
+        />
+        <StatCard
+          label="NETWORK LATENCY"
+          value={gossipHealth?.networkLatency?.toFixed(0) || 0}
+          description="AVG PROPAGATION MS"
+          icon={GlobeIcon}
+          intent="neutral"
+        />
       </div>
 
-      <div className="rounded-lg border-2 border-border overflow-hidden">
-        <div className="px-4 py-2 border-b border-border bg-accent/20 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Network Topology - Gossip Protocol
-          </span>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-muted-foreground">Herrenberg Protocol Active</span>
-          </div>
-        </div>
-        <div className="h-[400px]">
+      <StatCard
+        label="NETWORK TOPOLOGY - GOSSIP PROTOCOL"
+        icon={GlobeIcon}
+        description="HERRENBERG PROTOCOL ACTIVE"
+        className="mb-6"
+      >
+        <div className="h-[400px] -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4">
           {nodes && <LeafletMap nodes={nodes} />}
         </div>
-      </div>
+      </StatCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {gossipHealth && <GossipHealthPanel health={gossipHealth} />}
         {distribution && <StorageDistributionPanel distribution={distribution} />}
       </div>
 
-      <div className="rounded-lg border-2 border-border overflow-hidden">
-        <div className="px-4 py-2 border-b border-border bg-accent/20">
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Peer Connection Distribution
-          </span>
-        </div>
-        <div className="p-4 space-y-3">
-          {[
-            { label: '50+ peers', min: 50, max: Infinity, color: 'bg-green-500', bullet: 'bg-green-500' },
-            { label: '30-50 peers', min: 30, max: 50, color: 'bg-blue-500', bullet: 'bg-blue-500' },
-            { label: '15-30 peers', min: 15, max: 30, color: 'bg-yellow-500', bullet: 'bg-yellow-500' },
-            { label: '< 15 peers', min: 0, max: 15, color: 'bg-red-500', bullet: 'bg-red-500' },
-          ].map(({ label, min, max, color, bullet }) => {
-            const count = onlineNodes.filter(n =>
-              n.gossip.peersConnected >= min && n.gossip.peersConnected < max
-            ).length;
-            const percentage = onlineNodes.length > 0 ? (count / onlineNodes.length) * 100 : 0;
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <StatCard label="PEER CONNECTION DISTRIBUTION" icon={NetworkIcon}>
+          <div className="space-y-4 md:mt-4">
+            {[
+              { label: '50+ PEERS', min: 50, max: Infinity, color: 'bg-green-500' },
+              { label: '30-50 PEERS', min: 30, max: 50, color: 'bg-blue-500' },
+              { label: '15-30 PEERS', min: 15, max: 30, color: 'bg-yellow-500' },
+              { label: '< 15 PEERS', min: 0, max: 15, color: 'bg-red-500' },
+            ].map(({ label, min, max, color }) => {
+              const onlineNodes = nodes?.filter(n => n.status === 'online') || [];
+              const count = onlineNodes.filter(n =>
+                n.gossip.peersConnected >= min && n.gossip.peersConnected < max
+              ).length;
+              const percentage = onlineNodes.length > 0 ? (count / onlineNodes.length) * 100 : 0;
 
-            return (
-              <div key={label} className="flex items-center gap-3">
-                <div className="flex items-center gap-2 w-28">
-                  <span className={`size-2 rounded-full ${bullet}`} />
-                  <span className="text-xs font-medium uppercase">{label}</span>
+              return (
+                <div key={label} className="flex items-center gap-3">
+                  <div className="w-24 text-[10px] text-muted-foreground font-bold uppercase">{label}</div>
+                  <div className="flex-1 h-3 bg-card rounded overflow-hidden">
+                    <div
+                      className={cn('h-full rounded transition-all', color)}
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <div className="w-24 text-right text-[10px] font-mono text-muted-foreground uppercase tracking-tight">
+                    {count} NODES • {percentage.toFixed(0)}%
+                  </div>
                 </div>
-                <div className="flex-1 h-3 bg-accent rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${percentage}%` }} />
-                </div>
-                <div className="w-20 text-right text-xs font-mono">{count} nodes</div>
-                <div className="w-12 text-right text-xs text-muted-foreground">{percentage.toFixed(0)}%</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+              );
+            })}
+          </div>
+        </StatCard>
 
-      <div className="rounded-lg border-2 border-border overflow-hidden">
-        <div className="px-4 py-2 border-b border-border bg-accent/20">
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Gossip Message Flow (Last Hour)
-          </span>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4">
-          {/* Total Messages */}
-          <div className="border-r border-b lg:border-b-0 border-border">
-            <div className="flex items-center justify-between p-3 border-b border-border">
-              <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                <span className="size-2 rounded-full bg-primary" />
-                Total Messages
+        <StatCard label="GOSSIP MESSAGE FLOW (1H)" icon={ActivityIcon}>
+          <div className="grid grid-cols-2 gap-6 md:mt-4">
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Total Processed</p>
+              <div className="text-3xl font-display text-primary">
+                <NumberFlow value={totalMessages / 1000000} suffix="M" />
               </div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-tight mt-1 items-center flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                Network Wide
+              </p>
             </div>
-            <div className="bg-accent p-3">
-              <div className="text-3xl font-display text-primary">{(totalMessages / 1000000).toFixed(1)}M</div>
-              <p className="text-xs font-medium text-muted-foreground tracking-wide">messages processed</p>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Gossip Health</p>
+              <div className="text-3xl font-display text-green-400">
+                <NumberFlow value={gossipHealth?.healthScore || 0} suffix="%" />
+              </div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-tight mt-1 items-center flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                Protocol Efficiency
+              </p>
             </div>
           </div>
-
-          {/* Total Connections */}
-          <div className="border-b lg:border-b-0 lg:border-r border-border">
-            <div className="flex items-center justify-between p-3 border-b border-border">
-              <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                <span className="size-2 rounded-full bg-primary" />
-                Total Connections
-              </div>
-            </div>
-            <div className="bg-accent p-3">
-              <div className="text-3xl font-display">{gossipHealth?.totalPeers.toLocaleString()}</div>
-              <p className="text-xs font-medium text-muted-foreground tracking-wide">peer connections</p>
-            </div>
-          </div>
-
-          {/* Network Partitions */}
-          <div className="border-r border-border">
-            <div className="flex items-center justify-between p-3 border-b border-border">
-              <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                <span className={`size-2 rounded-full ${gossipHealth?.partitions ? 'bg-yellow-500' : 'bg-green-500'}`} />
-                Network Partitions
-              </div>
-            </div>
-            <div className="bg-accent p-3">
-              <div className="text-3xl font-display">{gossipHealth?.partitions || 0}</div>
-              <p className="text-xs font-medium text-muted-foreground tracking-wide">detected splits</p>
-            </div>
-          </div>
-
-          {/* Gossip Health */}
-          <div>
-            <div className="flex items-center justify-between p-3 border-b border-border">
-              <div className="flex items-center gap-2.5 font-semibold leading-none tracking-tight text-sm uppercase">
-                <span className="size-2 rounded-full bg-green-500" />
-                Gossip Health
-              </div>
-            </div>
-            <div className="bg-accent p-3">
-              <div className="text-3xl font-display text-green-400">{gossipHealth?.healthScore.toFixed(0)}%</div>
-              <p className="text-xs font-medium text-muted-foreground tracking-wide">protocol health</p>
-            </div>
-          </div>
-        </div>
+        </StatCard>
       </div>
     </DashboardPageLayout>
   );
