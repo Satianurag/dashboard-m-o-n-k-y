@@ -2,7 +2,13 @@
 
 import { FC, ReactNode, useMemo, useCallback, createContext, useContext, useState, useEffect } from 'react';
 import { ConnectionProvider, WalletProvider, useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { Adapter } from '@solana/wallet-adapter-base';
+import { Adapter, WalletError } from '@solana/wallet-adapter-base';
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  TorusWalletAdapter,
+  LedgerWalletAdapter,
+} from '@solana/wallet-adapter-wallets';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { DEVNET_RPC } from '@/server/api/config';
 
@@ -88,15 +94,26 @@ interface WalletContextProviderProps {
 
 export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children }) => {
   const endpoint = useMemo(() => DEVNET_RPC, []);
-  // The instruction snippet included a line for useEffect here, but it refers to state/props not defined in this component.
-  // As per the instructions to make changes faithfully and without unrelated edits, and to maintain syntactical correctness,
-  // this line is omitted as it would cause errors in this context.
-  // useEffect(() => setCurrentPage(1), [filteredNodes.length, sortBy, sortOrder]);
-  const wallets = useMemo(() => [], []);
+
+  // Configure wallet adapters - Wallet Standard-compliant wallets are auto-detected
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new TorusWalletAdapter(),
+      new LedgerWalletAdapter(),
+    ],
+    []
+  );
+
+  // Error handler for wallet errors
+  const onError = useCallback((error: WalletError, adapter?: Adapter) => {
+    console.error('Wallet error:', error.message, adapter?.name);
+  }, []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets} onError={onError} autoConnect>
         <WalletStateProvider>
           {children}
         </WalletStateProvider>
