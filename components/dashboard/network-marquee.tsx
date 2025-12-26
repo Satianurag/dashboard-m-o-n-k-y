@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNetworkStats } from '@/hooks/use-pnode-data-query';
 import { cn } from '@/lib/utils';
 
@@ -23,57 +23,12 @@ function MarqueeItem({ label, value, valueClassName }: MarqueeItemProps) {
     );
 }
 
-interface XandPrice {
-    price: number;
-}
-
-async function fetchXandPrice(): Promise<XandPrice | null> {
-    try {
-        // Use local API route to fetch XAND price (proxies to Jupiter API)
-        const response = await fetch('/api/xand-price');
-        if (!response.ok) return null;
-
-        const data = await response.json();
-        if (!data.price) return null;
-
-        return {
-            price: data.price,
-        };
-    } catch (error) {
-        console.error('Failed to fetch XAND price:', error);
-        return null;
-    }
-}
-
 
 export function NetworkMarquee() {
     const { data: stats } = useNetworkStats();
     const [isPaused, setIsPaused] = useState(false);
-    const [xandPrice, setXandPrice] = useState<XandPrice | null>(null);
-
-    // Fetch XAND price on mount and every 60 seconds
-    useEffect(() => {
-        fetchXandPrice().then(setXandPrice);
-        const interval = setInterval(() => {
-            fetchXandPrice().then(setXandPrice);
-        }, 60000); // Refresh every 60 seconds
-        return () => clearInterval(interval);
-    }, []);
-
-    const formatPrice = (price: number) => {
-        if (price < 0.0001) return `$${price.toExponential(2)}`;
-        if (price < 0.01) return `$${price.toFixed(6)}`;
-        if (price < 1) return `$${price.toFixed(4)}`;
-        return `$${price.toFixed(2)}`;
-    };
 
     const marqueeItems = stats ? [
-        // XAND Price Ticker - First item for visibility
-        ...(xandPrice ? [{
-            label: 'XAND',
-            value: formatPrice(xandPrice.price),
-            valueClassName: 'text-purple-400 font-semibold'
-        }] : []),
         { label: 'NODES ONLINE', value: `${stats.onlineNodes}/${stats.totalNodes}` },
         { label: 'NETWORK HEALTH', value: `${stats.networkHealth.toFixed(1)}%` },
         { label: 'AVG RESPONSE', value: `${stats.averageResponseTime.toFixed(0)}ms` },
