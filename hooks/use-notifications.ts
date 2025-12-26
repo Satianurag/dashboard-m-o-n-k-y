@@ -30,6 +30,7 @@ async function fetchNotifications(): Promise<Notification[]> {
             title: row.title,
             message: row.message,
             type: row.type as 'success' | 'info' | 'warning' | 'error',
+            priority: (row.priority as 'low' | 'medium' | 'high') || 'low',
             read: row.read || false,
             timestamp: row.timestamp,
         }));

@@ -43,7 +43,7 @@ export default function AnalyticsPage({
   const [period, setPeriod] = useState<'24h' | '7d' | '30d'>('24h');
   const { data: nodes, isLoading: nodesLoading, dataUpdatedAt } = usePNodes(initialNodes);
   const { data: stats, isLoading: statsLoading } = useNetworkStats(initialStats);
-  const { data: history, isLoading: historyLoading } = usePerformanceHistory(period, initialHistory);
+  const { data: history, isLoading: historyLoading } = usePerformanceHistory();
 
 
   const isLoading = nodesLoading || statsLoading || historyLoading;

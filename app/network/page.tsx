@@ -3,6 +3,7 @@
 import DashboardPageLayout from "@/components/dashboard/layout";
 import GlobeIcon from "@/components/icons/globe";
 import { usePNodes, useGossipHealth, useStorageDistribution } from "@/hooks/use-pnode-data-query";
+import type { PNode } from "@/types/pnode";
 import { LeafletMap } from "@/components/dashboard/leaflet-map";
 import { GossipHealthPanel, StorageDistributionPanel } from "@/components/dashboard/gossip-health";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -121,8 +122,8 @@ export default function NetworkPage() {
               { label: '15-30 PEERS', min: 15, max: 30, color: 'bg-yellow-500' },
               { label: '< 15 PEERS', min: 0, max: 15, color: 'bg-red-500' },
             ].map(({ label, min, max, color }) => {
-              const onlineNodes = nodes?.filter(n => n.status === 'online') || [];
-              const count = onlineNodes.filter(n =>
+              const onlineNodes = nodes?.filter((n: PNode) => n.status === 'online') || [];
+              const count = onlineNodes.filter((n: PNode) =>
                 n.gossip.peersConnected >= min && n.gossip.peersConnected < max
               ).length;
               const percentage = onlineNodes.length > 0 ? (count / onlineNodes.length) * 100 : 0;

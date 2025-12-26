@@ -331,26 +331,28 @@ export function useStorageDistribution() {
             if (!nodes || nodes.length === 0) return [];
 
             // Group storage by geographic region
-            const regionStorage: Record<string, { used: number; capacity: number }> = {};
+            const regionStorage: Record<string, { used: number; capacity: number; count: number }> = {};
 
             nodes.forEach(node => {
                 const region = node.location?.country || 'Unknown';
                 if (!regionStorage[region]) {
-                    regionStorage[region] = { used: 0, capacity: 0 };
+                    regionStorage[region] = { used: 0, capacity: 0, count: 0 };
                 }
                 regionStorage[region].used += node.metrics?.storageUsedGB || 0;
                 regionStorage[region].capacity += node.metrics?.storageCapacityGB || 0;
+                regionStorage[region].count++;
             });
 
-            // Convert to array and sort by capacity
+            // Convert to array and sort by capacity, return in correct format
             return Object.entries(regionStorage)
                 .map(([region, data]) => ({
                     region,
-                    usedGB: data.used,
-                    capacityGB: data.capacity,
-                    utilization: data.capacity > 0 ? (data.used / data.capacity) * 100 : 0
+                    nodeCount: data.count,
+                    storageCapacityTB: data.capacity / 1000, // Convert GB to TB
+                    storageUsedTB: data.used / 1000, // Convert GB to TB
+                    utilizationPercent: data.capacity > 0 ? (data.used / data.capacity) * 100 : 0
                 }))
-                .sort((a, b) => b.capacityGB - a.capacityGB)
+                .sort((a, b) => b.storageCapacityTB - a.storageCapacityTB)
                 .slice(0, 10); // Top 10 regions
         },
         staleTime: 5 * 60 * 1000, // 5 minute cache

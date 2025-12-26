@@ -67,7 +67,7 @@ export function NetworkMarquee() {
                                     key={`set${set}-${idx}`}
                                     label={item.label}
                                     value={item.value}
-                                    valueClassName={'valueClassName' in item ? item.valueClassName : undefined}
+                                    valueClassName={('valueClassName' in item ? item.valueClassName : undefined) as string | undefined}
                                 />
                             ))}
                             <span className="px-2 text-muted-foreground/20">•</span>

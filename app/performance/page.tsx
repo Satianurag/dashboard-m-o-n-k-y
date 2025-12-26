@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import DashboardPageLayout from "@/components/dashboard/layout";
 import { usePNodes, usePerformanceHistory } from "@/hooks/use-pnode-data-query";
+import type { PNode } from "@/types/pnode";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Bullet } from "@/components/ui/bullet";
@@ -53,7 +54,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 
 export default function PerformancePage() {
   const { data: nodes, isLoading, dataUpdatedAt } = usePNodes();
-  const { data: history } = usePerformanceHistory('24h');
+  const { data: history } = usePerformanceHistory();
 
   if (isLoading && !nodes) {
     return (
@@ -69,17 +70,17 @@ export default function PerformancePage() {
   const fairNodes = nodes?.filter((n: any) => (n.performanceScore || 0) >= 40 && (n.performanceScore || 0) < 70) || [];
   const poorNodes = nodes?.filter((n: any) => (n.performanceScore || 0) < 40) || [];
   const avgPerformance = nodes && nodes.length > 0
-    ? nodes.reduce((acc: number, n: any) => acc + (n.performanceScore || 0), 0) / nodes.length
+    ? nodes.reduce((acc: number, n: PNode) => acc + (n.performance?.score || 0), 0) / nodes.length
     : 0;
 
-  const onlineNodes = nodes?.filter(n => n.status === 'online') || [];
-  const excellentCount = onlineNodes.filter(n => n.performance.tier === 'excellent').length;
-  const goodCount = onlineNodes.filter(n => n.performance.tier === 'good').length;
-  const fairCount = onlineNodes.filter(n => n.performance.tier === 'fair').length;
-  const poorCount = onlineNodes.filter(n => n.performance.tier === 'poor').length;
+  const onlineNodes = nodes?.filter((n: PNode) => n.status === 'online') || [];
+  const excellentCount = onlineNodes.filter((n: PNode) => n.performance.tier === 'excellent').length;
+  const goodCount = onlineNodes.filter((n: PNode) => n.performance.tier === 'good').length;
+  const fairCount = onlineNodes.filter((n: PNode) => n.performance.tier === 'fair').length;
+  const poorCount = onlineNodes.filter((n: PNode) => n.performance.tier === 'poor').length;
 
   const avgScore = onlineNodes.length > 0
-    ? onlineNodes.reduce((acc, n) => acc + n.performance.score, 0) / onlineNodes.length
+    ? onlineNodes.reduce((acc: number, n: PNode) => acc + n.performance.score, 0) / onlineNodes.length
     : 0;
 
   const historyData = history?.map((h: any) => ({
@@ -260,7 +261,7 @@ export default function PerformancePage() {
               { label: '120-200MS', min: 120, max: 200, color: 'bg-yellow-500' },
               { label: '> 200MS', min: 200, max: Infinity, color: 'bg-red-500' },
             ].map(({ label, min, max, color }) => {
-              const count = onlineNodes.filter(n =>
+              const count = onlineNodes.filter((n: PNode) =>
                 n.metrics.responseTimeMs >= min && n.metrics.responseTimeMs < max
               ).length;
               const percentage = onlineNodes.length > 0 ? (count / onlineNodes.length) * 100 : 0;
