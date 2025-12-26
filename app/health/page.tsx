@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardPageLayout from "@/components/dashboard/layout";
-import { useHealthScoreBreakdown, usePNodes, useNetworkStats, useSlashingEvents, usePeerRankings } from "@/hooks/use-pnode-data-query";
+import { useHealthScoreBreakdown, usePNodes, useNetworkStats, useSlashingEvents, usePeerRankings, useHealthTrends } from "@/hooks/use-pnode-data-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Bullet } from "@/components/ui/bullet";
@@ -69,6 +69,8 @@ export default function HealthScorePage() {
   const { data: stats, isLoading: statsLoading } = useNetworkStats();
   const { data: slashingEvents } = useSlashingEvents();
   const { data: peerRankings } = usePeerRankings();
+  const { data: healthTrends } = useHealthTrends('24h');
+  const { data: healthTrends7d } = useHealthTrends('7d');
 
   const isLoading = healthLoading || nodesLoading || statsLoading;
 
@@ -135,15 +137,19 @@ export default function HealthScorePage() {
           <div className="space-y-3">
             <div className="flex justify-between items-center text-xs uppercase tracking-tight">
               <span className="text-muted-foreground">24h Change</span>
-              <span className="font-mono text-green-400 font-bold">+0.3%</span>
+              <span className={`font-mono font-bold ${(healthTrends?.trendPercent ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {(healthTrends?.trendPercent ?? 0) >= 0 ? '+' : ''}{(healthTrends?.trendPercent ?? 0).toFixed(1)}%
+              </span>
             </div>
             <div className="flex justify-between items-center text-xs uppercase tracking-tight">
               <span className="text-muted-foreground">7d Change</span>
-              <span className="font-mono text-green-400 font-bold">+1.2%</span>
+              <span className={`font-mono font-bold ${(healthTrends7d?.trendPercent ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {(healthTrends7d?.trendPercent ?? 0) >= 0 ? '+' : ''}{(healthTrends7d?.trendPercent ?? 0).toFixed(1)}%
+              </span>
             </div>
             <div className="flex justify-between items-center text-xs uppercase tracking-tight">
               <span className="text-muted-foreground">All-time High</span>
-              <span className="font-mono font-bold">{Math.max(overallScore + 2, 95).toFixed(0)}</span>
+              <span className="font-mono font-bold">{(healthTrends?.allTimeHigh ?? overallScore).toFixed(0)}</span>
             </div>
           </div>
         </StatCard>
@@ -154,22 +160,22 @@ export default function HealthScorePage() {
           <div className="h-[350px] md:mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
-                <PolarGrid stroke="hsl(var(--border))" />
+                <PolarGrid className="opacity-20" stroke="var(--border)" />
                 <PolarAngleAxis
                   dataKey="factor"
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
                 />
                 <PolarRadiusAxis
                   angle={30}
                   domain={[0, 100]}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
                 />
                 <Radar
                   name="Score"
                   dataKey="score"
-                  stroke="hsl(var(--primary))"
-                  fill="hsl(var(--primary))"
-                  fillOpacity={0.3}
+                  stroke="var(--destructive)"
+                  fill="var(--destructive)"
+                  fillOpacity={0.5}
                   strokeWidth={2}
                 />
               </RadarChart>
@@ -181,27 +187,34 @@ export default function HealthScorePage() {
           <div className="h-[350px] md:mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={factorData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis type="number" domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="var(--success)" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="var(--success)" stopOpacity={1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
+                <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} />
                 <YAxis
                   type="category"
                   dataKey="name"
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                  tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }}
                   width={100}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
+                    backgroundColor: 'var(--popover)',
+                    borderColor: 'var(--border)',
                     borderRadius: '8px',
                     fontSize: '12px',
+                    color: 'var(--popover-foreground)',
                   }}
                   formatter={(value: any, name: any) => [
                     `${Number(value).toFixed(1)}${name === 'weight' ? '%' : ''}`,
                     name === 'score' ? 'Score' : name === 'weight' ? 'Weight' : 'Weighted'
                   ]}
                 />
-                <Bar dataKey="score" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="score" fill="url(#barGradient)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -232,69 +245,35 @@ export default function HealthScorePage() {
         </div>
       </StatCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <StatCard label="PEER RANKINGS (TOP 10)" icon={TrophyIcon}>
-          <div className="divide-y divide-border/20 -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4">
-            {peerRankings?.slice(0, 10).map((peer: any, i: number) => (
-              <div key={peer.nodeId} className="px-4 py-3 flex items-center gap-4 hover:bg-card/30 transition-colors">
-                <span className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center font-display text-lg",
-                  peer.rank <= 3 ? "bg-primary/20 text-primary" : "bg-card text-muted-foreground"
+      <StatCard label="PEER RANKINGS (TOP 10)" icon={TrophyIcon} className="mb-6">
+        <div className="divide-y divide-border/20 -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4">
+          {peerRankings?.slice(0, 10).map((peer: any, i: number) => (
+            <div key={peer.nodeId} className="px-4 py-3 flex items-center gap-4 hover:bg-card/30 transition-colors">
+              <span className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center font-display text-lg",
+                peer.rank <= 3 ? "bg-primary/20 text-primary" : "bg-card text-muted-foreground"
+              )}>
+                {peer.rank}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="font-mono text-sm truncate uppercase">{peer.nodePubkey.slice(0, 16)}...</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-tight">
+                  Top {peer.percentile.toFixed(0)}% Percentile
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-mono text-lg text-primary">{peer.xScore.toFixed(1)}</div>
+                <div className={cn(
+                  "text-[10px] font-bold uppercase",
+                  peer.trend === 'up' ? 'text-green-400' : peer.trend === 'down' ? 'text-red-400' : 'text-muted-foreground'
                 )}>
-                  {peer.rank}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="font-mono text-sm truncate uppercase">{peer.nodePubkey.slice(0, 16)}...</div>
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-tight">
-                    Top {peer.percentile.toFixed(0)}% Percentile
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-mono text-lg text-primary">{peer.xScore.toFixed(1)}</div>
-                  <div className={cn(
-                    "text-[10px] font-bold uppercase",
-                    peer.trend === 'up' ? 'text-green-400' : peer.trend === 'down' ? 'text-red-400' : 'text-muted-foreground'
-                  )}>
-                    {peer.trend === 'up' ? '↑' : peer.trend === 'down' ? '↓' : '→'} {Math.abs(peer.trendChange).toFixed(1)}%
-                  </div>
+                  {peer.trend === 'up' ? '↑' : peer.trend === 'down' ? '↓' : '→'} {Math.abs(peer.trendChange).toFixed(1)}%
                 </div>
               </div>
-            ))}
-          </div>
-        </StatCard>
-
-        <StatCard label="RECENT SLASHING EVENTS" icon={ShieldIcon} intent="negative">
-          <div className="divide-y divide-border/20 -mx-3 -mb-3 md:-mx-6 md:-mb-6 md:mt-4">
-            {slashingEvents?.length === 0 ? (
-              <div className="p-12 text-center text-muted-foreground">
-                <div className="text-4xl mb-3 opacity-20">✓</div>
-                <p className="text-xs uppercase tracking-widest font-medium">No slashing events recorded</p>
-              </div>
-            ) : (
-              slashingEvents?.map((event: any) => (
-                <div key={event.id} className="px-4 py-3 hover:bg-card/30 transition-colors">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm truncate flex-1 uppercase">{event.nodePubkey.slice(0, 16)}...</span>
-                    <span className={cn(
-                      "text-[10px] font-bold px-2 py-0.5 rounded uppercase",
-                      event.type === 'double_sign' ? 'bg-red-500/20 text-red-500' :
-                        event.type === 'offline' ? 'bg-yellow-500/20 text-yellow-500' :
-                          'bg-orange-500/20 text-orange-500'
-                    )}>
-                      {event.type.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground uppercase font-medium">
-                    <span>Epoch {event.epoch}</span>
-                    <span className="text-red-500">-{event.amount} XAND</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1 truncate lowercase italic opacity-80">{event.details}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </StatCard>
-      </div>
+            </div>
+          ))}
+        </div>
+      </StatCard>
     </DashboardPageLayout>
   );
 }

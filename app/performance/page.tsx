@@ -11,13 +11,20 @@ import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
 } from 'recharts';
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Icons
 import TrophyIcon from "@/components/icons/trophy";
@@ -50,11 +57,41 @@ function LoadingState() {
   );
 }
 
+type TimePeriod = "1h" | "6h" | "24h";
+
+const chartConfig = {
+  latency: {
+    label: "Latency",
+    color: "var(--chart-1)",
+  },
+} satisfies ChartConfig;
+
 import { StatCard } from "@/components/dashboard/stat-card";
 
 export default function PerformancePage() {
   const { data: nodes, isLoading, dataUpdatedAt } = usePNodes();
   const { data: history } = usePerformanceHistory();
+  const [activeTab, setActiveTab] = useState<TimePeriod>("24h");
+
+  const handleTabChange = (value: string) => {
+    if (value === "1h" || value === "6h" || value === "24h") {
+      setActiveTab(value as TimePeriod);
+    }
+  };
+
+  // Filter data based on time period
+  const getFilteredData = (period: TimePeriod) => {
+    const now = Date.now();
+    const hours = period === "1h" ? 1 : period === "6h" ? 6 : 24;
+    const cutoff = now - hours * 60 * 60 * 1000;
+
+    return history
+      ?.filter(item => new Date(item.timestamp).getTime() > cutoff)
+      .map(item => ({
+        date: new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        latency: item.avgResponseTime,
+      })) || [];
+  };
 
   if (isLoading && !nodes) {
     return (
@@ -63,15 +100,6 @@ export default function PerformancePage() {
       </DashboardPageLayout>
     );
   }
-
-  const topNodes = nodes?.sort((a: any, b: any) => (b.performanceScore || 0) - (a.performanceScore || 0)).slice(0, 5) || [];
-  const excellentNodes = nodes?.filter((n: any) => (n.performanceScore || 0) >= 90) || [];
-  const goodNodes = nodes?.filter((n: any) => (n.performanceScore || 0) >= 70 && (n.performanceScore || 0) < 90) || [];
-  const fairNodes = nodes?.filter((n: any) => (n.performanceScore || 0) >= 40 && (n.performanceScore || 0) < 70) || [];
-  const poorNodes = nodes?.filter((n: any) => (n.performanceScore || 0) < 40) || [];
-  const avgPerformance = nodes && nodes.length > 0
-    ? nodes.reduce((acc: number, n: PNode) => acc + (n.performance?.score || 0), 0) / nodes.length
-    : 0;
 
   const onlineNodes = nodes?.filter((n: PNode) => n.status === 'online') || [];
   const excellentCount = onlineNodes.filter((n: PNode) => n.performance.tier === 'excellent').length;
@@ -83,11 +111,7 @@ export default function PerformancePage() {
     ? onlineNodes.reduce((acc: number, n: PNode) => acc + n.performance.score, 0) / onlineNodes.length
     : 0;
 
-  const historyData = history?.map((h: any) => ({
-    time: new Date(h.timestamp).getHours() + ':00',
-    latency: h.avgResponseTime,
-    nodes: h.onlineNodes,
-  })) || [];
+  const topNodes = nodes?.sort((a: any, b: any) => (b.performanceScore || 0) - (a.performanceScore || 0)).slice(0, 10) || [];
 
   return (
     <DashboardPageLayout
@@ -176,35 +200,245 @@ export default function PerformancePage() {
         </StatCard>
 
         {/* Latency Trends */}
-        <StatCard label="LATENCY TRENDS (24H)" icon={TimerIcon}>
-          <div className="h-[340px] md:mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={historyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis
-                  dataKey="time"
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                />
-                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  formatter={(value) => [`${Number(value).toFixed(0)}MS`]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="latency"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+        <StatCard label="LATENCY TRENDS" icon={TimerIcon}>
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="max-md:gap-4 md:mt-4"
+          >
+            <div className="flex items-center justify-between mb-4 max-md:contents">
+              <TabsList className="max-md:w-full">
+                <TabsTrigger value="1h">1H</TabsTrigger>
+                <TabsTrigger value="6h">6H</TabsTrigger>
+                <TabsTrigger value="24h">24H</TabsTrigger>
+              </TabsList>
+              <div className="flex items-center gap-6 max-md:order-1">
+                <div className="flex items-center gap-2 uppercase">
+                  <Bullet style={{ backgroundColor: 'var(--chart-1)' }} className="rotate-45" />
+                  <span className="text-sm font-medium text-muted-foreground">Latency</span>
+                </div>
+              </div>
+            </div>
+            <TabsContent value="1h" className="space-y-4">
+              <div className="bg-accent rounded-lg p-3">
+                <ChartContainer className="md:aspect-[3/1] w-full" config={chartConfig}>
+                  <AreaChart
+                    accessibilityLayer
+                    data={getFilteredData("1h")}
+                    margin={{
+                      left: -12,
+                      right: 12,
+                      top: 12,
+                      bottom: 12,
+                    }}
+                  >
+                    <defs>
+                      <linearGradient id="fillLatency" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="var(--color-latency)"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="var(--color-latency)"
+                          stopOpacity={0.1}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      horizontal={false}
+                      strokeDasharray="8 8"
+                      strokeWidth={2}
+                      stroke="var(--muted-foreground)"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      tickMargin={12}
+                      strokeWidth={1.5}
+                      tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                      className="uppercase text-sm"
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={0}
+                      tickCount={6}
+                      tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                      className="text-sm"
+                      domain={[0, "dataMax"]}
+                    />
+                    <ChartTooltip
+                      cursor={false}
+                      content={
+                        <ChartTooltipContent
+                          indicator="dot"
+                          className="min-w-[200px] px-4 py-3"
+                        />
+                      }
+                    />
+                    <Area
+                      dataKey="latency"
+                      type="linear"
+                      fill="none"
+                      stroke="var(--color-latency)"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              </div>
+            </TabsContent>
+            <TabsContent value="6h" className="space-y-4">
+              <div className="bg-accent rounded-lg p-3">
+                <ChartContainer className="md:aspect-[3/1] w-full" config={chartConfig}>
+                  <AreaChart
+                    accessibilityLayer
+                    data={getFilteredData("6h")}
+                    margin={{
+                      left: -12,
+                      right: 12,
+                      top: 12,
+                      bottom: 12,
+                    }}
+                  >
+                    <defs>
+                      <linearGradient id="fillLatency" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="var(--color-latency)"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="var(--color-latency)"
+                          stopOpacity={0.1}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      horizontal={false}
+                      strokeDasharray="8 8"
+                      strokeWidth={2}
+                      stroke="var(--muted-foreground)"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      tickMargin={12}
+                      strokeWidth={1.5}
+                      tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                      className="uppercase text-sm"
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={0}
+                      tickCount={6}
+                      tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                      className="text-sm"
+                      domain={[0, "dataMax"]}
+                    />
+                    <ChartTooltip
+                      cursor={false}
+                      content={
+                        <ChartTooltipContent
+                          indicator="dot"
+                          className="min-w-[200px] px-4 py-3"
+                        />
+                      }
+                    />
+                    <Area
+                      dataKey="latency"
+                      type="linear"
+                      fill="none"
+                      stroke="var(--color-latency)"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              </div>
+            </TabsContent>
+            <TabsContent value="24h" className="space-y-4">
+              <div className="bg-accent rounded-lg p-3">
+                <ChartContainer className="md:aspect-[3/1] w-full" config={chartConfig}>
+                  <AreaChart
+                    accessibilityLayer
+                    data={getFilteredData("24h")}
+                    margin={{
+                      left: -12,
+                      right: 12,
+                      top: 12,
+                      bottom: 12,
+                    }}
+                  >
+                    <defs>
+                      <linearGradient id="fillLatency" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="var(--color-latency)"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="var(--color-latency)"
+                          stopOpacity={0.1}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      horizontal={false}
+                      strokeDasharray="8 8"
+                      strokeWidth={2}
+                      stroke="var(--muted-foreground)"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      tickMargin={12}
+                      strokeWidth={1.5}
+                      tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                      className="uppercase text-sm"
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={0}
+                      tickCount={6}
+                      tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                      className="text-sm"
+                      domain={[0, "dataMax"]}
+                    />
+                    <ChartTooltip
+                      cursor={false}
+                      content={
+                        <ChartTooltipContent
+                          indicator="dot"
+                          className="min-w-[200px] px-4 py-3"
+                        />
+                      }
+                    />
+                    <Area
+                      dataKey="latency"
+                      type="linear"
+                      fill="none"
+                      stroke="var(--color-latency)"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              </div>
+            </TabsContent>
+          </Tabs>
         </StatCard>
       </div>
 
