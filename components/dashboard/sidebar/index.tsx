@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 
 import {
@@ -186,13 +187,13 @@ export function DashboardSidebar({
                   return (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild isActive={isActive}>
-                        <a
+                        <Link
                           href={item.url}
                           aria-current={isActive ? "page" : undefined}
                         >
                           <item.icon className="size-5" aria-hidden="true" />
                           <span>{item.title}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
