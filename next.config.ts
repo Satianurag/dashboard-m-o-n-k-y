@@ -2,6 +2,9 @@ import type { NextConfig } from "next"
 import path from "path"
 
 const nextConfig: NextConfig = {
+  // Note: cacheComponents (PPR) is incompatible with `export const revalidate`
+  // We use ISR with revalidate=60s which provides excellent caching
+
   // Enable TypeScript type checking in production
   typescript: {
     ignoreBuildErrors: false,

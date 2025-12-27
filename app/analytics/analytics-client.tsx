@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import DashboardPageLayout from "@/components/dashboard/layout";
 import ChartIcon from "@/components/icons/chart";
 import { usePNodes, useNetworkStats, usePerformanceHistory, useTrendData } from "@/hooks/use-pnode-data-query";
+import type { PerformanceHistory } from "@/types/pnode";
 import StatBlock from "@/components/dashboard/stat-block";
 import { NetworkChart } from "@/components/dashboard/network-chart";
 import { ExportButton } from "@/components/dashboard/export-button";
@@ -66,7 +67,7 @@ export default function AnalyticsPage({
     );
   }
 
-  const storageChartData = history?.map((h, i) => ({
+  const storageChartData = history?.map((h: PerformanceHistory, i: number) => ({
     time: new Date(h.timestamp).getHours() + ':00',
     storage: h.storageUsedTB,
     gossip: h.gossipMessages / 1000,
@@ -74,7 +75,7 @@ export default function AnalyticsPage({
 
   // Use real history for node growth, fallback to current if empty
   const nodeGrowthData = history && history.length > 0
-    ? history.map(h => ({
+    ? history.map((h: PerformanceHistory) => ({
       period: new Date(h.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
       nodes: h.onlineNodes
     }))

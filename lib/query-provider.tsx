@@ -9,11 +9,11 @@ function makeQueryClient() {
     return new QueryClient({
         defaultOptions: {
             queries: {
-                // Stale-while-revalidate: show cached data immediately, fetch in background
-                staleTime: 30 * 1000, // Consider data fresh for 30 seconds
-                gcTime: 5 * 60 * 1000, // Cache for 5 minutes
+                staleTime: 2 * 60 * 1000, // 2 minutes - aligned with server cache
+                gcTime: 10 * 60 * 1000, // 10 minutes - longer retention
                 refetchOnWindowFocus: true, // Refetch when user returns to tab
                 refetchOnReconnect: true, // Refetch on network reconnect
+                refetchOnMount: false, // Trust cached data on navigation
                 retry: 2, // Retry failed requests twice
                 retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
             },

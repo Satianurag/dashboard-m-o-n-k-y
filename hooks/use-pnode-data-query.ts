@@ -32,10 +32,12 @@ export function useNetworkStats(initialData?: any) {
     });
 }
 
-export function usePerformanceHistory(period: '24h' | '7d' | '30d' = '24h') {
+export function usePerformanceHistory(period: '24h' | '7d' | '30d' = '24h', initialData?: any) {
     return useQuery({
         queryKey: ['performance-history', period],
         queryFn: () => fetchApi<PerformanceHistory[]>(`type=performance-history&period=${period}`),
+        initialData,
+        staleTime: 2 * 60 * 1000,
         refetchInterval: REFRESH_INTERVAL,
     });
 }
